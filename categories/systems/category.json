@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "display_name": {"en": "Systems Engineering", "zh": "系统工程"},
+  "threshold": 5.0,
+  "digest_limit": 5,
+  "children": ["eng-blog", "framework", "cn-tech"]
+}

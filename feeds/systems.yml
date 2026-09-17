@@ -1,0 +1,81 @@
+# 系统工程:大厂工程博客 + 框架官方 + 中文技术媒体(20 源)
+# 迁移自 rss-feed/config.txt tech 分类,拆为三个子类
+- name: Cloudflare Blog
+  url: https://blog.cloudflare.com/rss/
+  category: systems/eng-blog
+
+- name: Claude Code Releases
+  url: https://github.com/anthropics/claude-code/releases.atom
+  category: systems/eng-blog
+
+- name: overreacted
+  url: https://overreacted.io/rss.xml
+  category: systems/eng-blog
+
+- name: GitHub Blog Engineering
+  url: https://github.blog/engineering/feed/
+  category: systems/eng-blog
+
+- name: Netflix Tech
+  url: https://netflixtechblog.com/feed
+  category: systems/eng-blog
+
+- name: Spotify Engineering
+  url: https://engineering.atspotify.com/feed
+  category: systems/eng-blog
+
+- name: Meta Engineering
+  url: https://engineering.fb.com/feed/
+  category: systems/eng-blog
+
+- name: Slack Engineering
+  url: https://slack.engineering/feed/
+  category: systems/eng-blog
+
+- name: Dropbox Tech
+  url: https://dropbox.tech/feed
+  category: systems/eng-blog
+
+- name: React Official
+  url: https://react.dev/rss.xml
+  category: systems/framework
+
+- name: Next.js
+  url: https://nextjs.org/feed.xml
+  category: systems/framework
+
+- name: Tailwind CSS
+  url: https://tailwindcss.com/feeds/feed.xml
+  category: systems/framework
+
+- name: Spring Official
+  url: https://spring.io/blog.atom
+  category: systems/framework
+
+- name: Rust Official
+  url: https://blog.rust-lang.org/feed.xml
+  category: systems/framework
+
+- name: Node.js Official
+  url: https://nodejs.org/en/feed/blog.xml
+  category: systems/framework
+
+- name: 少数派
+  url: https://sspai.com/feed
+  category: systems/cn-tech
+
+- name: 美团技术
+  url: https://tech.meituan.com/feed/
+  category: systems/cn-tech
+
+- name: InfoQ 中文
+  url: https://www.infoq.cn/feed
+  category: systems/cn-tech
+
+- name: Airbnb Engineering
+  url: https://medium.com/feed/airbnb-engineering
+  category: systems/eng-blog
+
+- name: PayPal Tech
+  url: https://medium.com/feed/paypal-tech
+  category: systems/eng-blog

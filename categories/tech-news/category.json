@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "display_name": {"en": "Tech News", "zh": "科技资讯"},
+  "threshold": 4.0,
+  "digest_limit": 5,
+  "children": ["cn-news", "en-news"]
+}

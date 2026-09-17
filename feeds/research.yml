@@ -1,0 +1,50 @@
+# 论文科研:arXiv CS 子类扩充 + 统计 ML(13 源)
+# 从 rss-feed academic 扩充:cs.AI/LG/CL → 全 CS 子类 + stat.ML
+- name: arXiv cs.CL
+  url: https://rss.arxiv.org/rss/cs.CL
+  category: research/arxiv-cs
+
+- name: arXiv cs.CV
+  url: https://rss.arxiv.org/rss/cs.CV
+  category: research/arxiv-cs
+
+- name: arXiv cs.NE
+  url: https://rss.arxiv.org/rss/cs.NE
+  category: research/arxiv-cs
+
+- name: arXiv cs.SE
+  url: https://rss.arxiv.org/rss/cs.SE
+  category: research/arxiv-cs
+
+- name: arXiv cs.PL
+  url: https://rss.arxiv.org/rss/cs.PL
+  category: research/arxiv-cs
+
+- name: arXiv cs.DB
+  url: https://rss.arxiv.org/rss/cs.DB
+  category: research/arxiv-cs
+
+- name: arXiv cs.DC
+  url: https://rss.arxiv.org/rss/cs.DC
+  category: research/arxiv-cs
+
+- name: arXiv cs.CR
+  url: https://rss.arxiv.org/rss/cs.CR
+  category: research/arxiv-cs
+
+- name: arXiv cs.AR
+  url: https://rss.arxiv.org/rss/cs.AR
+  category: research/arxiv-cs
+
+- name: arXiv cs.DS
+  url: https://rss.arxiv.org/rss/cs.DS
+  category: research/arxiv-cs
+
+- name: arXiv stat.ML
+  url: https://rss.arxiv.org/rss/stat.ML
+  category: research/arxiv-stat
+
+# TODO: Papers with Code 暂无官方 RSS,预留 papers-other 子类
+# - name: Papers with Code
+#   url: https://paperswithcode.com/latest.rss
+#   category: research/papers-other

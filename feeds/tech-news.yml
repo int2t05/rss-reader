@@ -1,0 +1,54 @@
+# 科技资讯:中文科技媒体 + 英文科技媒体(13 源)
+# 迁移自 rss-feed/config.txt news 分类
+# RSSHub 路由(/ 开头)需配置 RSSHUB_BASE_URL,未配置时自动跳过
+- name: Solidot
+  url: /solidot
+  category: tech-news/cn-news
+
+- name: 知乎日报
+  url: /zhihu/daily
+  category: tech-news/cn-news
+
+- name: 机器之心
+  url: /jiqizhixin
+  category: tech-news/cn-news
+
+- name: cnbeta
+  url: /cnbeta
+  category: tech-news/cn-news
+
+- name: 36氪
+  url: /36kr/newsflashes
+  category: tech-news/cn-news
+
+- name: IT之家
+  url: https://www.ithome.com/rss/
+  category: tech-news/cn-news
+
+- name: 爱范儿
+  url: https://www.ifanr.com/feed
+  category: tech-news/cn-news
+
+- name: 钛媒体
+  url: https://www.tmtpost.com/rss
+  category: tech-news/cn-news
+
+- name: 虎嗅
+  url: https://www.huxiu.com/rss/0.xml
+  category: tech-news/cn-news
+
+- name: 雷锋网
+  url: https://www.leiphone.com/feed
+  category: tech-news/cn-news
+
+- name: TechCrunch AI
+  url: https://techcrunch.com/category/artificial-intelligence/feed/
+  category: tech-news/en-news
+
+- name: The Verge AI
+  url: https://www.theverge.com/rss/ai-artificial-intelligence/index.xml
+  category: tech-news/en-news
+
+- name: MIT Tech Review
+  url: https://www.technologyreview.com/feed/
+  category: tech-news/en-news

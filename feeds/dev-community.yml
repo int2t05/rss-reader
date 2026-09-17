@@ -1,0 +1,82 @@
+# 开发者社区:GitHub Trending + 论坛 + Reddit(20 源)
+# 迁移自 rss-feed/config.txt community 分类,舍弃 V2EX/LinuxDo/掘金/博客园/开源中国
+# RSSHub 路由(/ 开头)需配置 RSSHUB_BASE_URL,未配置时自动跳过
+- name: GitHub Trending Python
+  url: /github/trending/daily/python
+  category: dev-community/github-trending
+
+- name: GitHub Trending TypeScript
+  url: /github/trending/daily/typescript
+  category: dev-community/github-trending
+
+- name: GitHub Trending Go
+  url: /github/trending/daily/go
+  category: dev-community/github-trending
+
+- name: GitHub Trending Rust
+  url: /github/trending/daily/rust
+  category: dev-community/github-trending
+
+- name: GitHub Topic LLM
+  url: /github/topics/llm
+  category: dev-community/github-topics
+
+- name: GitHub Topic Agent
+  url: /github/topics/agent
+  category: dev-community/github-topics
+
+- name: Hacker News
+  url: https://hnrss.org/frontpage
+  category: dev-community/forums
+
+- name: Hacker News Best
+  url: https://hnrss.org/best
+  category: dev-community/forums
+
+- name: Lobsters
+  url: https://lobste.rs/rss
+  category: dev-community/forums
+
+- name: Dev.to
+  url: https://dev.to/feed
+  category: dev-community/forums
+
+- name: TLDR
+  url: https://www.tldr.tech/rss
+  category: dev-community/forums
+
+- name: Reddit Programming
+  url: https://www.reddit.com/r/programming/hot.rss
+  category: dev-community/reddit
+
+- name: Reddit MachineLearning
+  url: https://www.reddit.com/r/MachineLearning/hot.rss
+  category: dev-community/reddit
+
+- name: Product Hunt
+  url: https://producthunt.com/feed
+  category: dev-community/forums
+
+- name: Kubernetes
+  url: https://kubernetes.io/feed.xml
+  category: dev-community/forums
+
+- name: Docker Blog
+  url: https://www.docker.com/blog/feed/
+  category: dev-community/forums
+
+- name: HashiCorp
+  url: https://www.hashicorp.com/blog/feed.xml
+  category: dev-community/forums
+
+- name: Databricks
+  url: https://www.databricks.com/feed
+  category: dev-community/forums
+
+- name: Google Blog
+  url: https://blog.google/rss/
+  category: dev-community/forums
+
+- name: Stack Overflow
+  url: https://stackoverflow.com/feeds
+  category: dev-community/forums

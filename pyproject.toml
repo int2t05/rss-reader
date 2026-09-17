@@ -1,0 +1,64 @@
+[project]
+name = "rss-reader"
+version = "0.1.0"
+description = "Personal information aggregation and AI summary system"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.27",
+    "feedparser>=6.0",
+    "pydantic>=2.5",
+    "openai>=1.0",
+    "ddgs>=9.0",
+    "trafilatura>=1.12",
+    "rich>=13.0",
+    "tenacity>=8.0",
+    "markdown-it-py>=3.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.6",
+    "mypy>=1.10",
+]
+search = [
+    "exa-py>=1.0",
+]
+fetch = [
+    "firecrawl-py>=1.0",
+]
+
+[project.scripts]
+rss-reader = "src.main:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "network: tests that make real network calls (fetch live RSS feeds)",
+    "llm: tests that make real LLM API calls (require OPENAI_API_KEY or ANTHROPIC_AUTH_TOKEN)",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true

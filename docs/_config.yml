@@ -1,0 +1,47 @@
+# Jekyll 配置:rss-reader GitHub Pages 站点
+# 站点根为 docs/,每日简报输出到 docs/_posts/YYYY-MM-DD-{zh,en}.md
+
+title: rss-reader Daily Briefing
+description: >-
+  个人信息聚合 + AI 总结系统每日简报。抓取 RSS 源(含自建源 FluxSift + auto-trend),
+  经三段式 pipeline(分类打分 → 选取去重 → agent 深度分析)产出中英双语简报。
+url: ""
+baseurl: ""
+lang: zh-CN
+
+# 使用 jekyll 默认 minima 主题(GitHub Pages 原生支持)
+theme: minima
+
+# 文章 permalink:按日期 + slug
+permalink: /:categories/:year/:month/:day/:title/
+
+# Markdown 渲染
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# 分页(每页 10 篇)
+plugins:
+  - jekyll-paginate
+  - jekyll-feed
+
+paginate: 10
+paginate_path: "/page:num/"
+
+# 默认 front matter:每篇 post 的 layout 默认为 post
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      author: rss-reader
+
+# 排除非简报文件(架构文档等)不作为 posts
+exclude:
+  - architecture/
+  - research/
+  - PLAN.md
+  - PRD.md
+  - TECH.md

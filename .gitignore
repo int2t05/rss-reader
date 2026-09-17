@@ -1,0 +1,53 @@
+# Secrets / local config
+.env
+.env.local
+.env.*.local
+
+# AI assistant config (私人,不进仓库)
+CLAUDE.md
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+.installed.cfg
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Runtime data (per project CLAUDE.md, summaries + dedup are runtime state)
+data/summaries/
+data/dedup.db
+data/dedup.db-journal
+
+# Docs audit (per global convention)
+docs/audit/
+
+# Reference repos (local research, not committed)
+reference/
+
+# OS
+.DS_Store
+Thumbs.db

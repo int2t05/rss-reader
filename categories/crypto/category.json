@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "display_name": {"en": "Crypto", "zh": "加密货币"},
+  "threshold": 6.0,
+  "digest_limit": 3,
+  "children": []
+}

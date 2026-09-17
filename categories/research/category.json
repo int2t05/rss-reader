@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "display_name": {"en": "Research Papers", "zh": "论文科研"},
+  "threshold": 7.0,
+  "digest_limit": 5,
+  "children": ["arxiv-cs", "arxiv-stat", "papers-other"]
+}

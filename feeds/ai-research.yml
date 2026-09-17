@@ -1,0 +1,81 @@
+# AI 研究:厂商博客 + 研究者博客 + AI 论文(20 源)
+# 迁移自 rss-feed/config.txt ai 分类,拆为三个子类
+- name: Anthropic News
+  url: https://www.anthropic.com/news/rss.xml
+  category: ai-research/ai-vendor
+
+- name: Anthropic Engineering
+  url: https://www.anthropic.com/engineering/rss.xml
+  category: ai-research/ai-vendor
+
+- name: OpenAI News
+  url: https://openai.com/news/rss.xml
+  category: ai-research/ai-vendor
+
+- name: DeepMind Blog
+  url: https://deepmind.google/blog/rss.xml
+  category: ai-research/ai-vendor
+
+- name: HuggingFace Blog
+  url: https://huggingface.co/blog/feed.xml
+  category: ai-research/ai-vendor
+
+- name: Apple ML Research
+  url: https://machinelearning.apple.com/rss.xml
+  category: ai-research/ai-vendor
+
+- name: NVIDIA Developer
+  url: https://developer.nvidia.com/blog/feed/
+  category: ai-research/ai-vendor
+
+- name: Microsoft Research
+  url: https://www.microsoft.com/en-us/research/feed/
+  category: ai-research/ai-vendor
+
+- name: Meta AI
+  url: https://ai.meta.com/blog/rss/
+  category: ai-research/ai-vendor
+
+- name: AWS ML Blog
+  url: https://aws.amazon.com/blogs/machine-learning/feed/
+  category: ai-research/ai-vendor
+
+- name: BAIR Blog
+  url: https://bair.berkeley.edu/blog/feed.xml
+  category: ai-research/ai-vendor
+
+- name: Distill
+  url: https://distill.pub/rss.xml
+  category: ai-research/ai-vendor
+
+- name: Simon Willison
+  url: https://simonwillison.net/atom/everything/
+  category: ai-research/ai-researcher
+
+- name: Lilian Weng
+  url: https://lilianweng.github.io/index.xml
+  category: ai-research/ai-researcher
+
+- name: Karpathy
+  url: https://karpathy.github.io/feed.xml
+  category: ai-research/ai-researcher
+
+- name: Sebastian Raschka
+  url: https://magazine.sebastianraschka.com/feed
+  category: ai-research/ai-researcher
+
+- name: Alignment Forum
+  url: https://www.alignmentforum.org/rss
+  category: ai-research/ai-researcher
+
+- name: HuggingFace Daily Papers
+  url: https://huggingface.co/papers/feed
+  category: ai-research/ai-papers
+
+- name: arXiv cs.AI
+  url: https://rss.arxiv.org/rss/cs.AI
+  category: ai-research/ai-papers
+
+- name: arXiv cs.LG
+  url: https://rss.arxiv.org/rss/cs.LG
+  category: ai-research/ai-papers
