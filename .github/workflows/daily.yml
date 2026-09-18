@@ -1,6 +1,6 @@
 name: Daily Briefing
 
-# 每日 UTC 00:17 跑完整 pipeline,产出中英双语简报并发布到 GitHub Pages。
+# 每日 UTC 00:17 跑完整 pipeline,产出中文简报并发布到 GitHub Pages。
 # 亦可手动触发(支持传入指定日期)。
 on:
   schedule:
@@ -41,11 +41,10 @@ jobs:
 
       - name: Run daily pipeline
         env:
+          PYTHONUNBUFFERED: "1"  # 强制无缓冲,CI 管道下进度/日志立即可见
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
-          EXA_API_KEY: ${{ secrets.EXA_API_KEY }}
-          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
           RSSHUB_BASE_URL: ${{ secrets.RSSHUB_BASE_URL }}
         run: |
           uv run rss-reader --hours ${{ github.event.inputs.hours || '24' }} --log-level INFO

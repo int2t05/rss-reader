@@ -1,10 +1,9 @@
-"""模型层测试:ContentItem / RSSSourceConfig / CategoryConfig / AnalysisResult。"""
+"""模型层测试:ContentItem / RSSSourceConfig / CategoryConfig / ContentAnalysis。"""
 from datetime import datetime, timezone
 
 import pytest
 
 from src.models import (
-    AnalysisResult,
     CategoryConfig,
     ContentAnalysis,
     ContentItem,
@@ -74,13 +73,13 @@ def test_category_config_reserved_finance_disabled():
     cfg = CategoryConfig(
         name="finance",
         enabled=False,
-        display_name={"en": "Finance", "zh": "财经"},
+        display_name="财经",
         threshold=6.0,
         digest_limit=3,
         children=[],
     )
     assert cfg.enabled is False
-    assert cfg.display_name["zh"] == "财经"
+    assert cfg.display_name == "财经"
 
 
 def test_category_config_with_children():
@@ -88,7 +87,7 @@ def test_category_config_with_children():
     cfg = CategoryConfig(
         name="ai-research",
         enabled=True,
-        display_name={"en": "AI Research", "zh": "AI 研究"},
+        display_name="AI 研究",
         threshold=7.0,
         digest_limit=8,
         children=["ai-vendor", "ai-researcher", "ai-papers"],
@@ -110,8 +109,8 @@ def test_content_analysis_score_and_tags():
     assert analysis.reason is None
 
 
-def test_item_processing_holds_tier1_and_tier3():
-    """ItemProcessing 同时容纳 Tier1 与 Tier3 结果。"""
+def test_item_processing_holds_tier1_analysis():
+    """ItemProcessing 容纳 Tier1 分析结果。"""
     proc = ItemProcessing(
         analysis=ContentAnalysis(
             category_path="research/arxiv-cs",
@@ -121,32 +120,7 @@ def test_item_processing_holds_tier1_and_tier3():
         ),
     )
     assert proc.analysis is not None
-    assert proc.deep_analysis is None
-
-
-def test_analysis_result_full():
-    """Tier3 输出:标题/摘要/背景/影响/参考/标签。"""
-    result = AnalysisResult(
-        title="精炼标题",
-        summary="3-5 句总结",
-        background="技术背景",
-        impact="影响与意义",
-        references=[{"title": "相关参考", "url": "https://example.com/ref"}],
-        tags=["tag1", "tag2"],
-    )
-    assert result.references[0].url == "https://example.com/ref"
-    assert len(result.tags) == 2
-
-
-def test_analysis_result_minimal():
-    """Tier3 输出允许空 background / impact / references(fallback 场景)。"""
-    result = AnalysisResult(
-        title="Fallback",
-        summary="无背景",
-    )
-    assert result.background == ""
-    assert result.references == []
-    assert result.tags == []
+    assert proc.analysis.score == 7.0
 
 
 def test_source_type_is_str_enum():

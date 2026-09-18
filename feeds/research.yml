@@ -1,5 +1,6 @@
-# 论文科研:arXiv CS 子类扩充 + 统计 ML(13 源)
-# 从 rss-feed academic 扩充:cs.AI/LG/CL → 全 CS 子类 + stat.ML
+# 论文科研:arXiv CS 子类扩充 + 统计 ML + 物理/量化/数学 + 期刊会议
+# 从 rss-feed academic 扩充:全 CS 子类 + stat + physics/quant/math/q-bio + 期刊会议
+
 - name: arXiv cs.CL
   url: https://rss.arxiv.org/rss/cs.CL
   category: research/arxiv-cs
@@ -40,11 +41,119 @@
   url: https://rss.arxiv.org/rss/cs.DS
   category: research/arxiv-cs
 
+- name: arXiv cs.RO
+  url: https://rss.arxiv.org/rss/cs.RO
+  category: research/arxiv-cs
+
+- name: arXiv cs.IR
+  url: https://rss.arxiv.org/rss/cs.IR
+  category: research/arxiv-cs
+
+- name: arXiv cs.HC
+  url: https://rss.arxiv.org/rss/cs.HC
+  category: research/arxiv-cs
+
+- name: arXiv cs.NI
+  url: https://rss.arxiv.org/rss/cs.NI
+  category: research/arxiv-cs
+
+- name: arXiv cs.OS
+  url: https://rss.arxiv.org/rss/cs.OS
+  category: research/arxiv-cs
+
+- name: arXiv cs.GR
+  url: https://rss.arxiv.org/rss/cs.GR
+  category: research/arxiv-cs
+
+- name: arXiv cs.MA
+  url: https://rss.arxiv.org/rss/cs.MA
+  category: research/arxiv-cs
+
+- name: arXiv cs.SD
+  url: https://rss.arxiv.org/rss/cs.SD
+  category: research/arxiv-cs
+
+- name: arXiv cs.SI
+  url: https://rss.arxiv.org/rss/cs.SI
+  category: research/arxiv-cs
+
 - name: arXiv stat.ML
   url: https://rss.arxiv.org/rss/stat.ML
   category: research/arxiv-stat
 
-# TODO: Papers with Code 暂无官方 RSS,预留 papers-other 子类
-# - name: Papers with Code
-#   url: https://paperswithcode.com/latest.rss
-#   category: research/papers-other
+- name: arXiv stat.ME
+  url: https://rss.arxiv.org/rss/stat.ME
+  category: research/arxiv-stat
+
+- name: arXiv stat.TH
+  url: https://rss.arxiv.org/rss/stat.TH
+  category: research/arxiv-stat
+
+- name: arXiv physics.comp-ph
+  url: https://rss.arxiv.org/rss/physics.comp-ph
+  category: research/arxiv-other
+
+- name: arXiv physics.data-an
+  url: https://rss.arxiv.org/rss/physics.data-an
+  category: research/arxiv-other
+
+- name: arXiv quant-ph
+  url: https://rss.arxiv.org/rss/quant-ph
+  category: research/arxiv-other
+
+- name: arXiv math.CO
+  url: https://rss.arxiv.org/rss/math.CO
+  category: research/arxiv-other
+
+- name: arXiv math.PR
+  url: https://rss.arxiv.org/rss/math.PR
+  category: research/arxiv-other
+
+- name: arXiv q-bio.NC
+  url: https://rss.arxiv.org/rss/q-bio.NC
+  category: research/arxiv-other
+
+- name: arXiv q-bio.QM
+  url: https://rss.arxiv.org/rss/q-bio.QM
+  category: research/arxiv-other
+
+# 期刊/会议(直链)
+- name: ACL Anthology
+  url: https://aclanthology.org/atom.xml
+  category: research/papers-other
+
+- name: JMLR
+  url: https://www.jmlr.org/jmlr.xml
+  category: research/papers-other
+
+- name: Nature
+  url: https://www.nature.com/nature.rss
+  category: research/papers-other
+
+- name: Nature Machine Intelligence
+  url: https://www.nature.com/natmachintell.rss
+  category: research/papers-other
+
+- name: Science
+  url: https://www.science.org/action/showFeed?type=etoc&journalCode=science
+  category: research/papers-other
+
+- name: Science Robotics
+  url: https://www.science.org/action/showFeed?type=etoc&journalCode=robotics
+  category: research/papers-other
+
+- name: MIT News AI
+  url: https://news.mit.edu/topic/artificial-intelligence2/rss
+  category: research/papers-other
+
+- name: Stanford HAI
+  url: https://hai.stanford.edu/news/rss
+  category: research/papers-other
+
+- name: CACM
+  url: https://cacm.acm.org/rss/
+  category: research/papers-other
+
+- name: PNAS
+  url: https://www.pnas.org/rss.aspx
+  category: research/papers-other

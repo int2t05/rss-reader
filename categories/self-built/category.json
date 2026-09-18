@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "display_name": {"en": "Self-built Sources", "zh": "自建源"},
+  "display_name": "自建源",
   "threshold": 4.0,
   "digest_limit": 3,
-  "children": ["fluxsift", "auto-trend"]
+  "children": ["auto-trend"]
 }

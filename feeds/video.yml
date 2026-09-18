@@ -1,0 +1,130 @@
+# 视频:YouTube 直链 + B 站(RSSHub 路由)+ FluxSift 自建视频分析
+# B 站与 FluxSift 需配置 RSSHUB_BASE_URL / FLUXSIFT_* 环境变量,未配置时静默跳过
+
+# YouTube 直链(立即可用)
+- name: Two Minute Papers
+  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFbfYPyITQ-7lupoD7IJ_ZA
+  category: video/youtube
+
+- name: 3Blue1Brown
+  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFYO_jab_esuRTT54ljmlizA
+  category: video/youtube
+
+- name: Fireship
+  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFsBjURrPoezykLs86EqCGJw
+  category: video/youtube
+
+- name: ThePrimeagen
+  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULF8ENHE6xdFuwLrH2eyUikMQ
+  category: video/youtube
+
+- name: IBM Technology
+  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFKWaEZ-_VmcTdDP4OcN62RA
+  category: video/youtube
+
+- name: Yannic Kilcher
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCm94SB0Dbg
+  category: video/youtube
+
+- name: Computerphile
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7J4wpNw
+  category: video/youtube
+
+- name: The Coding Train
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCvjgXvBlNQHnpz5itk7mGZw
+  category: video/youtube
+
+# B 站 UP 主(RSSHub 路由,需配置 RSSHUB_BASE_URL)
+- name: Pi
+  url: /bilibili/user/video/316183842
+  category: video/bilibili
+
+- name: 技术蛋老师
+  url: /bilibili/user/video/327247876
+  category: video/bilibili
+
+- name: 技术胖
+  url: /bilibili/user/video/165659472
+  category: video/bilibili
+
+- name: 峰华前端工程师
+  url: /bilibili/user/video/302954484
+  category: video/bilibili
+
+- name: 先进编译实验室
+  url: /bilibili/user/video/1540261574
+  category: video/bilibili
+
+- name: 程序员黄玄
+  url: /bilibili/user/video/43231611
+  category: video/bilibili
+
+- name: AnthonyFu
+  url: /bilibili/user/video/668380
+  category: video/bilibili
+
+- name: 魔术师卡颂
+  url: /bilibili/user/video/453618117
+  category: video/bilibili
+
+- name: Go夜读
+  url: /bilibili/user/video/326749661
+  category: video/bilibili
+
+- name: CodeSheep
+  url: /bilibili/user/video/384068749
+  category: video/bilibili
+
+- name: 程序员鱼皮
+  url: /bilibili/user/video/12890453
+  category: video/bilibili
+
+- name: 跟李沐学AI
+  url: /bilibili/user/video/1567748478
+  category: video/bilibili
+
+- name: 同济子豪兄
+  url: /bilibili/user/video/1900783
+  category: video/bilibili
+
+- name: 莫烦Python
+  url: /bilibili/user/video/243821484
+  category: video/bilibili
+
+- name: 码农高天
+  url: /bilibili/user/video/245645656
+  category: video/bilibili
+
+- name: 软件工艺师
+  url: /bilibili/user/video/361469957
+  category: video/bilibili
+
+- name: 小甲鱼
+  url: /bilibili/user/video/480571210
+  category: video/bilibili
+
+- name: GeekHour
+  url: /bilibili/user/video/102438649
+  category: video/bilibili
+
+- name: 黑马程序员
+  url: /bilibili/user/video/37974444
+  category: video/bilibili
+
+- name: 湖科大教书匠
+  url: /bilibili/user/video/360996402
+  category: video/bilibili
+
+- name: 中科大郑烇
+  url: /bilibili/user/video/410739029
+  category: video/bilibili
+
+- name: 北京大学肖臻
+  url: /bilibili/user/video/12370885
+  category: video/bilibili
+
+# FluxSift 自建视频分析(B 站/抖音收藏夹),经 cpolar 隧道转发
+- name: FluxSift
+  url: ${FLUXSIFT_FEED_URL}/${FLUXSIFT_TOKEN}.xml
+  category: video/fluxsift
+  enabled: false  # 部署 FluxSift 后改为 true,配置 .env 中的 FLUXSIFT_FEED_URL 和 FLUXSIFT_TOKEN

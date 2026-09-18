@@ -79,3 +79,35 @@
 - name: PayPal Tech
   url: https://medium.com/feed/paypal-tech
   category: systems/eng-blog
+
+- name: Uber Engineering
+  url: /uber/blog
+  category: systems/eng-blog
+
+- name: Stripe Blog
+  url: https://stripe.com/blog/feed.rss
+  category: systems/eng-blog
+
+- name: Discord Blog
+  url: https://discord.com/blog/rss.xml
+  category: systems/eng-blog
+
+- name: Shopify Engineering
+  url: https://shopify.engineering/feed
+  category: systems/eng-blog
+
+- name: Go Blog
+  url: https://go.dev/blog/feed.atom
+  category: systems/framework
+
+- name: Python Insider
+  url: https://blog.python.org/feeds/posts/default/
+  category: systems/framework
+
+- name: PostgreSQL
+  url: https://planet.postgresql.org/rss20.xml
+  category: systems/framework
+
+- name: Anthropic Research
+  url: /anthropic/research
+  category: systems/eng-blog

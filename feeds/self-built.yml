@@ -1,12 +1,5 @@
-# 自建源:FluxSift(B站/抖音收藏夹分析)+ auto-trend(GitHub Trending 分析)
-# 两者都产出 RSS,新系统直接订阅,零适配代码
-# 部署后填入实际 URL,默认 disabled 避免未部署时报错
-- name: FluxSift
-  url: ${FLUXSIFT_FEED_URL}/${FLUXSIFT_TOKEN}.xml
-  category: self-built/fluxsift
-  enabled: false  # 部署 FluxSift 后改为 true,配置 .env 中的 FLUXSIFT_FEED_URL 和 FLUXSIFT_TOKEN
-
+# 自建源:auto-trend(GitHub Trending 分析,直链 RSS)
+# FluxSift 已迁至 video 分类。新自建源产出 RSS 即可订阅,零适配代码
 - name: auto-trend
-  url: ${AUTOTREND_FEED_URL}
+  url: https://int2t05.github.io/auto-trend/feed.xml
   category: self-built/auto-trend
-  enabled: false  # 部署 auto-trend RSS 输出后改为 true,配置 .env 中的 AUTOTREND_FEED_URL

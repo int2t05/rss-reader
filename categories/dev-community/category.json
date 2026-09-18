@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "display_name": {"en": "Developer Community", "zh": "开发者社区"},
+  "display_name": "开发者社区",
   "threshold": 5.0,
   "digest_limit": 5,
   "children": ["github-trending", "github-topics", "forums", "reddit"]

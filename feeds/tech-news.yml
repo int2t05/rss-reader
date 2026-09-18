@@ -41,6 +41,10 @@
   url: https://www.leiphone.com/feed
   category: tech-news/cn-news
 
+- name: 量子位
+  url: https://www.qbitai.com/feed
+  category: tech-news/cn-news
+
 - name: TechCrunch AI
   url: https://techcrunch.com/category/artificial-intelligence/feed/
   category: tech-news/en-news
@@ -51,4 +55,8 @@
 
 - name: MIT Tech Review
   url: https://www.technologyreview.com/feed/
+  category: tech-news/en-news
+
+- name: Ars Technica
+  url: https://feeds.arstechnica.com/arstechnica/index
   category: tech-news/en-news

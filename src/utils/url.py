@@ -5,9 +5,11 @@ from __future__ import annotations
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 # 追踪参数前缀/全名,去重时一律丢弃
-# TODO: 未覆盖 fbclid/gclid/msclkid/yclid/igshid/spm/scm 等常见追踪参数
-_TRACKING_PARAM_PREFIXES = ("utm_", "ref_", "source_")
-_TRACKING_PARAMS = {"ref", "source", "tracking_source", "mc_cid", "mc_eid"}
+_TRACKING_PARAM_PREFIXES = ("utm_", "ref_", "source_", "spm_", "scm_")
+_TRACKING_PARAMS = {
+    "ref", "source", "tracking_source", "mc_cid", "mc_eid",
+    "fbclid", "gclid", "msclkid", "yclid", "igshid", "spm", "scm",
+}
 
 
 def _is_tracking_param(name: str) -> bool:

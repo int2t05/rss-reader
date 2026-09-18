@@ -8,7 +8,6 @@ from __future__ import annotations
 import calendar
 import hashlib
 import logging
-import os
 import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -17,25 +16,16 @@ import feedparser
 import httpx
 
 from src.models import ContentItem, RSSSourceConfig, SourceType
+from src.utils.env import expand_env
 
 logger = logging.getLogger(__name__)
-
-_ENV_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
-
-
-def _expand_env(value: str) -> str:
-    """将 ${VAR_NAME} 替换为 os.environ['VAR_NAME'],未定义时保留原样。
-
-    示例:"http://host/feed/${TOKEN}" → "http://host/feed/secret-123"
-    """
-    return _ENV_VAR_PATTERN.sub(
-        lambda m: os.environ.get(m.group(1), m.group(0)).strip(),
-        value,
-    )
 
 
 class RSSSource:
     """RSS/Atom 源:配置驱动,用 feedparser 解析,支持 ${VAR} 环境变量展开。"""
+
+    # 每源条目上限:截断高产出源(如 arXiv 子类每日数百篇),控制 Tier1 成本与时延
+    _MAX_ITEMS_PER_SOURCE = 30
 
     def __init__(self, config: RSSSourceConfig, http_client: httpx.AsyncClient):
         self.config = config
@@ -47,10 +37,10 @@ class RSSSource:
         return self.config.category
 
     async def fetch(self, since: datetime) -> list[ContentItem]:
-        """抓取 since 之后的新条目。单源失败返回空列表,不抛异常。"""
+        """抓取 since 之后的新条目,每源截断至最近 _MAX_ITEMS_PER_SOURCE 条。单源失败返回空列表。"""
         items: list[ContentItem] = []
         try:
-            feed_url = _expand_env(self.config.url)
+            feed_url = expand_env(self.config.url)
             response = await self.client.get(feed_url, follow_redirects=True)
             response.raise_for_status()
 
@@ -72,7 +62,6 @@ class RSSSource:
                     metadata={
                         "feed_name": self.config.name,
                         "category": self.config.category,
-                        # TODO: entry.get("tags", []) 对 None 不安全,tags=None 时抛 TypeError 跳过整源
                         "tags": [tag.term for tag in entry.get("tags", []) or []],
                     },
                 )
@@ -81,7 +70,8 @@ class RSSSource:
             logger.warning("HTTP error fetching RSS %s: %s", self.config.name, e)
         except Exception as e:
             logger.warning("Error parsing RSS %s: %s", self.config.name, e)
-        return items
+        # 截断高产出源(arXiv 子类等),保留最近 N 条(entries 通常已按时间倒序)
+        return items[: self._MAX_ITEMS_PER_SOURCE]
 
     def _parse_date(self, entry: dict) -> datetime | None:
         """解析发布日期,优先 struct_time,回退 RFC2822,无时区补 UTC。
@@ -119,10 +109,17 @@ class RSSSource:
         return ""
 
     def _generate_id(self, entry: dict) -> str:
-        """生成稳定唯一 ID:feed_url 哈希 + entry id 哈希。"""
-        # TODO: id/link 都缺失时 entry_id="",产生固定哈希,多条目碰撞丢数据
-        entry_id = entry.get("id", entry.get("link", ""))
-        entry_hash = hashlib.sha256(str(entry_id).encode("utf-8")).hexdigest()[:16]
-        # TODO: feed_id 提取脆弱,localhost:5000 含冒号,RSSHub base_url 变更导致去重失效
-        feed_id = str(self.config.url).split("//")[-1].replace("/", "_")
-        return f"rss_{feed_id}_{entry_hash}"
+        """生成稳定唯一 ID:源名 slug + entry 标识(id/link,回退 title+发布时间+正文)哈希。
+
+        源名作前缀不受 RSSHub base_url 变更影响;id/link 缺失时回退内容指纹避免碰撞。
+        """
+        entry_id = entry.get("id") or entry.get("link") or ""
+        if not entry_id:
+            # id/link 都缺失时,用 title + 发布时间 + 正文前缀生成稳定标识,避免多条目碰撞
+            title = entry.get("title", "")
+            published = entry.get("published", entry.get("updated", ""))
+            content_prefix = (self._extract_content(entry) or "")[:200]
+            entry_id = f"{title}|{published}|{content_prefix}"
+        entry_hash = hashlib.sha256(entry_id.encode("utf-8")).hexdigest()[:16]
+        source_slug = re.sub(r"[^\w]", "_", self.config.name) or "source"
+        return f"rss_{source_slug}_{entry_hash}"

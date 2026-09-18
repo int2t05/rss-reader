@@ -68,6 +68,30 @@
   url: https://www.alignmentforum.org/rss
   category: ai-research/ai-researcher
 
+- name: Google Research
+  url: https://research.google/blog/rss/
+  category: ai-research/ai-researcher
+
+- name: Latent Space
+  url: https://www.latent.space/feed
+  category: ai-research/ai-researcher
+
+- name: The Gradient
+  url: https://thegradient.pub/rss/
+  category: ai-research/ai-researcher
+
+- name: AI Snake Oil
+  url: https://aisnakeoil.substack.com/feed
+  category: ai-research/ai-researcher
+
+- name: Chip Huyen
+  url: https://chiphuyen.com/feed.xml
+  category: ai-research/ai-researcher
+
+- name: Eugene Yan
+  url: https://eugeneyan.com/feed/
+  category: ai-research/ai-researcher
+
 - name: HuggingFace Daily Papers
   url: https://huggingface.co/papers/feed
   category: ai-research/ai-papers

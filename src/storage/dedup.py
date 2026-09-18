@@ -18,10 +18,10 @@ class DedupStore:
     """
 
     def __init__(self, db_path: Path | str):
-        """打开 SQLite 文件,自动建表。"""
-        # TODO: 未设 WAL 模式,并发写抛 "database is locked";应 PRAGMA journal_mode=WAL
-        # TODO: 未设 check_same_thread=False,async 场景跨线程使用会抛错
-        self._conn = sqlite3.connect(str(db_path))
+        """打开 SQLite 文件,自动建表。WAL 模式提升并发写,check_same_thread=False 适配 async。"""
+        self._conn = sqlite3.connect(str(db_path), check_same_thread=False)
+        self._conn.execute("PRAGMA journal_mode=WAL")
+        self._conn.execute("PRAGMA synchronous=NORMAL")
         self._conn.execute(
             """
             CREATE TABLE IF NOT EXISTS processed_items (

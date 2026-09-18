@@ -22,7 +22,7 @@ def categories_root(tmp_path: Path) -> Path:
         json.dumps(
             {
                 "enabled": True,
-                "display_name": {"en": "AI Research", "zh": "AI 研究"},
+                "display_name": "AI 研究",
                 "threshold": 7.0,
                 "digest_limit": 8,
                 "children": ["ai-vendor", "ai-researcher", "ai-papers"],
@@ -40,7 +40,7 @@ def categories_root(tmp_path: Path) -> Path:
         json.dumps(
             {
                 "enabled": True,
-                "display_name": {"en": "Systems", "zh": "系统工程"},
+                "display_name": "系统工程",
                 "threshold": 5.0,
                 "digest_limit": 5,
                 "children": ["eng-blog", "framework", "cn-tech"],
@@ -56,7 +56,7 @@ def categories_root(tmp_path: Path) -> Path:
     fin_dir = root / "finance"
     fin_dir.mkdir(parents=True)
     (fin_dir / "category.json").write_text(
-        json.dumps({"enabled": False, "display_name": {"en": "Finance", "zh": "财经"}, "threshold": 6.0, "digest_limit": 3, "children": []}, ensure_ascii=False),
+        json.dumps({"enabled": False, "display_name": "财经", "threshold": 6.0, "digest_limit": 3, "children": []}, ensure_ascii=False),
         encoding="utf-8",
     )
 
@@ -113,32 +113,6 @@ def test_registry_get_by_path_no_match(categories_root: Path):
     reg = CategoryRegistry(categories_root)
     reg.load_from_raw({"ai-research": {"enabled": True}})
     assert reg.get_by_path("unknown/sub") is None
-
-
-def test_registry_get_analysis_prompt(categories_root: Path):
-    """获取分类的 Tier1 打分 prompt(analysis.md 内容)。"""
-    reg = CategoryRegistry(categories_root)
-    reg.load_from_raw({"ai-research": {"enabled": True}})
-    prompt = reg.get_analysis_prompt("ai-research")
-    assert prompt is not None
-    assert "AI 研究打分标准" in prompt
-
-
-def test_registry_get_agent_prompt(categories_root: Path):
-    """获取分类的 Tier3 agent 系统 prompt(agent_system.md 内容)。"""
-    reg = CategoryRegistry(categories_root)
-    reg.load_from_raw({"ai-research": {"enabled": True}})
-    prompt = reg.get_agent_prompt("ai-research")
-    assert prompt is not None
-    assert "AI 领域分析员" in prompt
-
-
-def test_registry_missing_prompt_returns_none(categories_root: Path):
-    """分类无 analysis.md / agent_system.md 时返回 None。"""
-    reg = CategoryRegistry(categories_root)
-    reg.load_from_raw({"finance": {"enabled": True}})  # finance 目录无 prompt 文件
-    assert reg.get_analysis_prompt("finance") is None
-    assert reg.get_agent_prompt("finance") is None
 
 
 def test_registry_category_tree_json(categories_root: Path):

@@ -44,7 +44,7 @@ def categories_root(tmp_path: Path) -> Path:
             json.dumps(
                 {
                     "enabled": True,
-                    "display_name": {"en": name, "zh": name},
+                    "display_name": name,
                     "threshold": threshold,
                     "digest_limit": limit,
                     "children": children,

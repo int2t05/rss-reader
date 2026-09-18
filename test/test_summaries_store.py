@@ -22,16 +22,6 @@ def test_save_summary_creates_file(store: SummaryStore):
     assert "# 简报" in file_path.read_text(encoding="utf-8")
 
 
-def test_save_summary_bilingual_creates_two_files(store: SummaryStore):
-    """save_bilingual 写入中英两份文件:YYYY-MM-DD-zh.md + YYYY-MM-DD-en.md。"""
-    date = datetime(2026, 9, 17, tzinfo=timezone.utc)
-    store.save_bilingual(zh="# 中文简报", en="# English Briefing", date=date)
-    assert (store.summaries_dir / "2026-09-17-zh.md").exists()
-    assert (store.summaries_dir / "2026-09-17-en.md").exists()
-    assert "中文简报" in (store.summaries_dir / "2026-09-17-zh.md").read_text(encoding="utf-8")
-    assert "English Briefing" in (store.summaries_dir / "2026-09-17-en.md").read_text(encoding="utf-8")
-
-
 def test_load_summary_returns_content(store: SummaryStore):
     """load 返回已保存的 Markdown 内容。"""
     date = datetime(2026, 9, 17, tzinfo=timezone.utc)
@@ -53,15 +43,6 @@ def test_summary_path_returns_path(store: SummaryStore):
     path = store.summary_path(date)
     assert path.name == "2026-09-17.md"
     assert str(store.summaries_dir) in str(path)
-
-
-def test_summary_path_bilingual(store: SummaryStore):
-    """summary_path 支持 lang 参数:zh/en 后缀。"""
-    date = datetime(2026, 9, 17, tzinfo=timezone.utc)
-    zh_path = store.summary_path(date, lang="zh")
-    en_path = store.summary_path(date, lang="en")
-    assert zh_path.name == "2026-09-17-zh.md"
-    assert en_path.name == "2026-09-17-en.md"
 
 
 def test_save_overwrites_existing(store: SummaryStore):

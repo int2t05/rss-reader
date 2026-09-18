@@ -28,14 +28,14 @@ def config_dir(tmp_path: Path) -> Path:
                 "categories": {
                     "ai-research": {
                         "enabled": True,
-                        "display_name": {"en": "AI Research", "zh": "AI 研究"},
+                        "display_name": "AI 研究",
                         "threshold": 7.0,
                         "digest_limit": 8,
                         "children": ["ai-vendor", "ai-researcher", "ai-papers"],
                     },
                     "finance": {
                         "enabled": False,
-                        "display_name": {"en": "Finance", "zh": "财经"},
+                        "display_name": "财经",
                         "threshold": 6.0,
                         "digest_limit": 3,
                         "children": [],
@@ -53,7 +53,7 @@ def config_dir(tmp_path: Path) -> Path:
         json.dumps(
             {
                 "enabled": True,
-                "display_name": {"en": "AI Research", "zh": "AI 研究"},
+                "display_name": "AI 研究",
                 "threshold": 7.0,
                 "digest_limit": 8,
                 "children": ["ai-vendor", "ai-researcher", "ai-papers"],

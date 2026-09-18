@@ -21,24 +21,12 @@ flowchart TB
         RSSHUB[build_source 工厂]
     end
 
-    subgraph Tier1
-        CLS[ContentClassifier<br/>单次 LLM 分类+打分]
-    end
-
     subgraph Tier2
         SEL[ContentSelector<br/>URL去重→阈值→主题去重→配额]
     end
 
-    subgraph Tier3
-        LOOP[AgentLoop<br/>有界 ReAct max 10 步]
-        CRAG[CRAGEvaluator]
-        SCH[SearchChain<br/>Exa→DuckDuckGo]
-        FCH[FetchChain<br/>Firecrawl→trafilatura→httpx]
-        SSRF[validate_url]
-    end
-
     subgraph 输出
-        RND[render_bilingual]
+        RND[render_markdown]
         SUM[SummaryStore]
         PAGES[GitHubPagesPublisher]
         HOOK[WebhookPublisher]
@@ -52,13 +40,7 @@ flowchart TB
     RSS --> CLS
     RSSHUB --> CLS
     CLS --> SEL
-    SEL --> LOOP
-    CRAG --> LOOP
-    LOOP --> SCH
-    LOOP --> FCH
-    FCH --> SSRF
-
-    LOOP --> RND
+    SEL --> RND
     RND --> SUM
     RND --> PAGES
     RND --> HOOK
@@ -98,10 +80,10 @@ class Config:
     rsshub_base_url: str | None
     data_dir: Path
 
-def load_config(project_dir: Path | None) -> Config
+def load_config(project_dir: Path | None = None, config_path: str | None = None) -> Config
 ```
 
-加载 `data/config.json`(主配置)+ `categories/*/category.json`(分类)+ `feeds/*.yml`(源),支持 `${VAR}` 展开。
+加载 `data/config.json`(主配置,`config_path` 覆盖默认路径)+ `categories/*/category.json`(分类)+ `feeds/*.yml`(源),支持 `${VAR}` 展开(`utils/env.py` 共享)。
 
 ### 分类注册表(`src/processing/categories.py`)
 
@@ -127,14 +109,13 @@ class AIClientConfig:
     api_key_env: str
     base_url: str | None
     analysis_concurrency: int
-    throttle_sec: float
 
 class AIClient:
     def __init__(self, config: AIClientConfig)
-    async def complete(self, system: str, user: str, temperature: float = 0.7, max_tokens: int | None = None) -> str
+    async def complete(self, system: str | None = None, user: str | None = None, *, messages: list[dict] | None = None, temperature: float = 0.7, max_tokens: int | None = None) -> str
 ```
 
-OpenAI 兼容,通过 `api_key_env` + `base_url` + `model` 适配 OpenAI/DeepSeek/Gemini/Ollama 等。
+OpenAI 兼容,通过 `api_key_env` + `base_url` + `model` 适配 OpenAI/DeepSeek/Gemini/Ollama 等。`complete` 支持单轮(`system`+`user`,Tier1/Tier2)与多轮(`messages` 列表,Tier3 ReAct)。`AsyncOpenAI` 设 `timeout=60s`。
 
 ### Tier 1:分类 + 打分(`src/ai/classifier.py`)
 
@@ -157,76 +138,33 @@ class ContentSelector:
 
 四步:`dedup_by_url`(URL 规范化去重)→ `_filter_by_threshold`(分类感知阈值)→ `_topic_dedup`(按父分类分组,LLM 判断同事件)→ `_apply_quota`(分类配额,分数降序截取)。
 
-### Tier 3:Agent 循环(`src/ai/agent/loop.py`)
-
-```python
-class AgentLoop:
-    def __init__(self, client, registry, crag, search_chain, fetch_chain, max_steps: int = 10)
-    async def run(self, item: ContentItem, category_display_name: str) -> AnalysisResult
-```
-
-有界 ReAct 循环,CRAG 入口评估(strong 跳过联网 / ambiguous 自主 / weak 强制),工具调用 `web_search` + `web_fetch`,输出结构化 JSON。超步返回 fallback `AnalysisResult`。
-
-### CRAG(`src/ai/agent/crag.py`)
-
-```python
-class CRAGEvaluator:
-    def evaluate(self, item: ContentItem) -> str  # "strong" | "ambiguous" | "weak"
-```
-
-启发式:`<500 字符 → weak`,`>2000 字符 + 技术细节 → strong`,其余 `ambiguous`。
-
-### 降级链(`src/ai/agent/search_chain.py`、`fetch_chain.py`)
-
-```python
-class SearchChain:
-    backends: list[SearchClient]  # [ExaClient(if key), DuckDuckGoClient(always)]
-    async def search(self, query: str, max_results: int = 5) -> list[SearchResult]
-
-class FetchChain:
-    backends: list[FetchClient]  # [FirecrawlClient(if key), TrafilaturaClient, LocalHttpClient]
-    async def fetch(self, url: str) -> str  # 入口 validate_url
-```
-
-首个成功返回,全失败返回空列表/空字符串,末位零配置兜底。
-
-### SSRF 防护(`src/ai/agent/ssrf.py`)
-
-```python
-def validate_url(url: str) -> None  # 抛 ValidationError
-```
-
-拒绝 localhost / IPv4 私有网段 / 云元数据 / 非 HTTP 协议。
-
 ### 渲染(`src/render/`)
 
 ```python
-def render_markdown(items: list[ContentItem], date: datetime, lang: str = "zh") -> str
-
-def render_bilingual(items: list[ContentItem], date: datetime) -> BilingualResult  # .zh + .en
+def render_markdown(items: list[ContentItem], date: datetime) -> str
 ```
 
-按父分类分节,每条目含 title(链接)/ score / summary / background / impact / references / tags。
+按父分类分节,每条目含 title(链接)/ score / summary / tags。title/url 转义 Markdown 特殊字符(`]`、`)`)。
 
 ### 发布(`src/publish/`)
 
 ```python
 class GitHubPagesPublisher:
     def __init__(self, posts_dir: Path)
-    def publish(self, zh: str, en: str, date: datetime) -> tuple[Path, Path]  # 同步,写 YYYY-MM-DD-{zh,en}.md
+    def publish(self, content: str, date: datetime) -> Path  # 写 YYYY-MM-DD.md
 
 class WebhookPublisher:
     def __init__(self, configs: list[dict])
-    async def publish(self, content: str, date: datetime) -> list[tuple[bool, str | None]]
+    async def publish(self, content: str, date: datetime) -> list[tuple[bool, str | None]]  # 并发
 ```
 
-`GitHubPagesPublisher` 写 Jekyll front matter(layout/title/date/lang)。`WebhookPublisher` 支持 Feishu/Slack/Discord/Custom,单 webhook 失败不中断。
+`GitHubPagesPublisher` 写 Jekyll front matter(layout/title/date)。`WebhookPublisher` 支持 Feishu/Slack/Discord/Custom,`asyncio.gather` 并发,单 webhook 失败不中断。
 
 ### 存储(`src/storage/`)
 
 ```python
-class DedupStore:  # SQLite, item_id + fetched_at
-    def __init__(self, db_path: Path | str)
+class DedupStore:  # SQLite, item_id + fetched_at,接入 pipeline
+    def __init__(self, db_path: Path | str)  # WAL + check_same_thread=False
     def is_processed(self, item_id: str) -> bool
     def mark_processed(self, item_id: str) -> None
     def batch_unprocessed(self, item_ids: list[str]) -> list[str]
@@ -234,8 +172,7 @@ class DedupStore:  # SQLite, item_id + fetched_at
 class SummaryStore:  # Markdown 落盘
     def __init__(self, summaries_dir: Path | str)
     def save(self, content: str, date: datetime) -> Path
-    def save_bilingual(self, zh: str, en: str, date: datetime) -> tuple[Path, Path]
-    def load(self, date: datetime, lang: str | None = None) -> str | None
+    def load(self, date: datetime) -> str | None
 ```
 
 ### 工具(`src/utils/url.py`、`src/processing/content.py`、`src/processing/dedup.py`)
@@ -261,29 +198,24 @@ sequenceDiagram
     participant P as Publish
 
     M->>S: fetch(since=now-24h)
-    S-->>M: list[ContentItem] 200-500
+    S-->>M: list[ContentItem] ~500-1000(每源截断 30)
     M->>T1: classify_batch(items)
-    T1-->>M: items 带 analysis
+    T1-->>M: items 带 analysis(分类+分数+摘要)
     M->>T2: select(items, use_llm_dedup=True)
     T2->>T2: URL去重→阈值→主题去重→配额
     T2-->>M: 30-50 精选
-    loop 每条精选
-        M->>T3: run(item, display_name)
-        T3->>T3: CRAG 评估
-        T3-->>M: AnalysisResult
-    end
-    M->>R: render_bilingual(selected)
-    R-->>M: BilingualResult(zh, en)
-    M->>P: save_bilingual + publish
+    M->>R: render_markdown(selected)
+    R-->>M: content (中文 Markdown)
+    M->>P: save + publish
 ```
 
 ## 存储
 
 | 数据 | 方案 | 路径 |
 |---|---|---|
-| 每日总结 | Markdown | `data/summaries/YYYY-MM-DD-{zh,en}.md` |
-| GitHub Pages | Jekyll | `docs/_posts/YYYY-MM-DD-{zh,en}.md` |
-| 去重状态 | SQLite | `data/dedup.db`(已实现,未接入 pipeline) |
+| 每日总结 | Markdown | `data/summaries/YYYY-MM-DD.md` |
+| GitHub Pages | Jekyll | `docs/_posts/YYYY-MM-DD.md` |
+| 去重状态 | SQLite | `data/dedup.db`(WAL,接入 pipeline) |
 | 主配置 | JSON | `data/config.json` |
 | 源配置 | YAML | `feeds/*.yml`(6 文件,84 源) |
 | 分类配置 | JSON | `categories/*/category.json`(8 分类) |
@@ -313,7 +245,7 @@ sequenceDiagram
 
 ## 安全
 
-- SSRF 防护:`validate_url` 拒绝 localhost/内网/云元数据(见 TODO:IPv6/重定向漏洞)
 - API key:存 `.env`,`api_key_env` 仅存环境变量名
-- `trust_env=False`:所有 httpx 客户端禁用系统代理
-- 速率:`analysis_concurrency` Semaphore + `throttle_sec`(已定义,未消费 — 见 TODO)
+- `trust_env=False`:所有 httpx 客户端禁用系统代理(CI 友好;本地需代理的国际源会抓取失败,日志 WARNING)
+- 速率:`analysis_concurrency=10` Semaphore;`tenacity` 对 429/5xx/超时指数退避(3 次)
+- 每源截断 30 条:控制高产出源(arXiv 子类)的 Tier1 调用量与时延

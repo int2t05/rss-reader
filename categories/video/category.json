@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "display_name": "视频",
+  "threshold": 4.0,
+  "digest_limit": 3,
+  "children": ["bilibili", "youtube", "fluxsift"]
+}

@@ -81,11 +81,11 @@ _TYPE_MAP: dict[str, type] = {
 
 
 class WebhookPublisher:
-    """Webhook 发布器:多 webhook 并发发布,单 webhook 失败不中断。
+    """Webhook 发布器:多 webhook 发布,单 webhook 失败不中断。
 
     示例:
         publisher = WebhookPublisher([{"type": "feishu", "url": "..."}])
-        await publisher.publish(content=zh_md, date=datetime.now())
+        await publisher.publish(content=md, date=datetime.now())
     """
 
     def __init__(self, configs: list[dict[str, Any]]):
@@ -103,15 +103,14 @@ class WebhookPublisher:
             self.webhooks.append(cls(url))
 
     async def publish(self, content: str, date: datetime) -> list[tuple[bool, str | None]]:
-        """向所有 webhook 发布简报,返回 [(success, error), ...]。单 webhook 失败不中断。"""
-        # TODO: 顺序执行,与 docstring 声称的"并发"矛盾,应改 asyncio.gather
-        # TODO: httpx.AsyncClient 缺 trust_env=False,违反项目约定(CI 系统代理会干扰)
-        results: list[tuple[bool, str | None]] = []
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            for webhook in self.webhooks:
-                success, error = await self._publish_one(client, webhook, content, date)
-                results.append((success, error))
-        return results
+        """并发向所有 webhook 发布简报,返回 [(success, error), ...]。单 webhook 失败不中断。"""
+        import asyncio
+
+        async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
+            results = await asyncio.gather(
+                *(self._publish_one(client, webhook, content, date) for webhook in self.webhooks)
+            )
+        return list(results)
 
     async def _publish_one(
         self,

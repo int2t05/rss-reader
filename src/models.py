@@ -34,17 +34,10 @@ class CategoryConfig(BaseModel):
 
     name: str
     enabled: bool
-    display_name: dict[str, str]  # {"en": "...", "zh": "..."}
+    display_name: str  # 中文显示名
     threshold: float
     digest_limit: int
     children: list[str] = Field(default_factory=list)
-
-
-class Reference(BaseModel):
-    """Tier3 深度分析产出的参考链接。"""
-
-    title: str
-    url: str
 
 
 class ContentAnalysis(BaseModel):
@@ -57,22 +50,10 @@ class ContentAnalysis(BaseModel):
     reason: str | None = None
 
 
-class AnalysisResult(BaseModel):
-    """Tier3 输出:深度分析的结构化结果。fallback 场景 background/impact 可为空。"""
-
-    title: str
-    summary: str
-    background: str = ""
-    impact: str = ""
-    references: list[Reference] = Field(default_factory=list)
-    tags: list[str] = Field(default_factory=list)
-
-
 class ItemProcessing(BaseModel):
-    """单条 ContentItem 的处理中间态:Tier1 分析与 Tier3 深度分析结果。"""
+    """单条 ContentItem 的处理中间态:Tier1 分析结果。"""
 
     analysis: ContentAnalysis | None = None
-    deep_analysis: AnalysisResult | None = None
 
 
 class ContentItem(BaseModel):

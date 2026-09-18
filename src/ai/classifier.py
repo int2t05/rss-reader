@@ -157,11 +157,11 @@ class ContentClassifier:
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             MofNCompleteColumn(),
-            transient=True,
             console=self.console,
         ) as progress:
             task = progress.add_task("Classifying", total=len(items))
             coros = [_process(item, task) for item in items]
             results = await asyncio.gather(*coros)
 
+        logger.info("Tier1 classified %d items", len(results))
         return list(results)

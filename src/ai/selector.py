@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -19,12 +20,15 @@ from src.ai.prompting.deduplication import (
     topic_dedup_system_prompt,
     topic_dedup_user_prompt,
 )
-from src.ai.utils import parse_json_response
+from src.ai.utils import parse_json_array_response
 from src.models import ContentItem
 from src.processing.categories import CategoryRegistry
 from src.processing.dedup import dedup_by_url, group_by_category
 
 logger = logging.getLogger(__name__)
+
+# 主题去重每批上限:控制单次 LLM prompt 大小与时延,大组(如 arXiv)分批并发处理
+_TOPIC_DEDUP_CHUNK = 30
 
 
 class ContentSelector:
@@ -51,18 +55,24 @@ class ContentSelector:
         use_llm_dedup=False 时跳过 LLM 主题去重,仅纯程序逻辑(用于测试/低成本场景)。
         """
         # 1. 跨源 URL 去重
+        before = len(items)
         items = dedup_by_url(items)
+        logger.info("Tier2 URL 去重:%d → %d", before, len(items))
 
         # 2. 分类感知阈值过滤
+        before = len(items)
         items = self._filter_by_threshold(items)
+        logger.info("Tier2 阈值过滤:%d → %d", before, len(items))
 
         # 3. 主题去重(可选,需 LLM)
         if use_llm_dedup and self.client is not None and len(items) > 1:
+            before = len(items)
             items = await self._topic_dedup(items)
+            logger.info("Tier2 主题去重:%d → %d", before, len(items))
 
         # 4. 分类配额平衡
         items = self._apply_quota(items)
-
+        logger.info("Tier2 配额平衡后:%d 条", len(items))
         return items
 
     def _filter_by_threshold(self, items: list[ContentItem]) -> list[ContentItem]:
@@ -84,23 +94,32 @@ class ContentSelector:
         return result
 
     async def _topic_dedup(self, items: list[ContentItem]) -> list[ContentItem]:
-        """主题去重:按父分类分组,每组内 LLM 判断同事件,保留分数最高的。
+        """主题去重:按父分类分组,大组分批并发 LLM 聚类,每簇保留分数最高的。
 
-        借鉴 Horizon merge_topic_duplicates,但按父分类分组降低 prompt 大小。
+        大组(如 arXiv 200+ 条)按 _TOPIC_DEDUP_CHUNK 分批,每批一次 LLM 调用,
+        prompt 大小有界,批次间 asyncio.gather 并发,避免单次巨大 prompt 拖死。
         """
         grouped = group_by_category(items, by_parent=True)
+        # 单元素组直通,多元素组按 chunk 切批
         result: list[ContentItem] = []
-
+        batches: list[tuple[str, list[ContentItem]]] = []
         for parent_cat, cat_items in grouped.items():
             if len(cat_items) <= 1:
                 result.extend(cat_items)
                 continue
+            for i in range(0, len(cat_items), _TOPIC_DEDUP_CHUNK):
+                batches.append((parent_cat, cat_items[i : i + _TOPIC_DEDUP_CHUNK]))
 
-            clusters = await self._cluster_by_topic(parent_cat, cat_items)
+        # 并发聚类:每批一次 LLM 调用
+        clusters_list = await asyncio.gather(
+            *(self._cluster_by_topic(cat, chunk) for cat, chunk in batches)
+        )
+
+        # 每簇保留分数最高
+        for clusters in clusters_list:
             for cluster in clusters:
                 if not cluster:
                     continue
-                # 每簇保留分数最高的
                 best = max(
                     cluster,
                     key=lambda x: x.processing.analysis.score if x.processing and x.processing.analysis else 0.0,
@@ -122,26 +141,10 @@ class ContentSelector:
         user_prompt = topic_dedup_user_prompt(category=parent_cat, items_summary=items_summary)
 
         response = await self.client.complete(system=system_prompt, user=user_prompt, temperature=0)
-        # TODO: parse_json_response 仅返回 dict,主题去重期望 list[list[str]],此处为 workaround;
-        # 应在 ai/utils.py 增加 parse_json_array_response,消除此处脆弱解析
-        parsed = parse_json_response(response)
-
-        # parse_json_response 要求返回 dict,但此处期望 list;手动解析
-        if parsed is not None:
-            # 极少数 LLM 把数组包成 {"clusters": [...]}
-            if "clusters" in parsed:
-                clusters_raw = parsed["clusters"]
-            else:
-                clusters_raw = [list(parsed.values())]
-        else:
-            # 尝试直接解析为 JSON 数组
-            import json
-
-            try:
-                clusters_raw = json.loads(response.strip().removeprefix("```json").removesuffix("```").strip())
-            except (json.JSONDecodeError, ValueError):
-                logger.warning("Topic dedup parse failed for %s, keeping all items", parent_cat)
-                return [[item] for item in items]
+        clusters_raw = parse_json_array_response(response)
+        if clusters_raw is None:
+            logger.warning("Topic dedup parse failed for %s, keeping all items", parent_cat)
+            return [[item] for item in items]
 
         # 映射 ID → item
         id_to_item = {it.id: it for it in items}

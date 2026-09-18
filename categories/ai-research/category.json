@@ -1,6 +1,6 @@
 {
   "enabled": true,
-  "display_name": {"en": "AI Research", "zh": "AI 研究"},
+  "display_name": "AI 研究",
   "threshold": 7.0,
   "digest_limit": 8,
   "children": ["ai-vendor", "ai-researcher", "ai-papers"]

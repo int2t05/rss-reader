@@ -3,27 +3,15 @@
 from __future__ import annotations
 
 import json
-import os
-import re
+import logging
 from pathlib import Path
 
 import yaml
 
 from src.models import CategoryConfig, RSSSourceConfig
+from src.utils.env import expand_env
 
-_ENV_VAR_PATTERN = re.compile(r"\$\{(\w+)\}")
-
-
-def _expand_env(value: str) -> str:
-    """将 ${VAR_NAME} 替换为 os.environ['VAR_NAME'],未定义时保留原样。
-
-    示例:"https://lwn.net/${LWN_TOKEN}" → "https://lwn.net/secret-123"
-    """
-    # TODO: 与 sources/rss.py 中的 _expand_env 重复,应提取到 utils/env.py 共享
-    return _ENV_VAR_PATTERN.sub(
-        lambda m: os.environ.get(m.group(1), m.group(0)).strip(),
-        value,
-    )
+logger = logging.getLogger(__name__)
 
 
 class Config:
@@ -72,7 +60,7 @@ def _load_category_configs(categories_root: Path, raw_categories: dict) -> list[
             CategoryConfig(
                 name=name,
                 enabled=merged.get("enabled", False),
-                display_name=merged.get("display_name", {"en": name, "zh": name}),
+                display_name=merged.get("display_name", name),
                 threshold=merged.get("threshold", 5.0),
                 digest_limit=merged.get("digest_limit", 5),
                 children=merged.get("children", []),
@@ -93,31 +81,31 @@ def _load_feeds(feeds_root: Path) -> list[RSSSourceConfig]:
         for entry in raw_list:
             if not entry.get("enabled", True):
                 continue
-            # TODO: entry["name"]/entry["url"]/entry["category"] 缺字段时抛 KeyError 中断全部加载,应 try/except
-            sources.append(
-                RSSSourceConfig(
-                    name=entry["name"],
-                    url=_expand_env(entry["url"]),
-                    category=entry["category"],
-                    enabled=True,
-                    content_extractor=entry.get("content_extractor"),
+            try:
+                sources.append(
+                    RSSSourceConfig(
+                        name=entry["name"],
+                        url=expand_env(entry["url"]),
+                        category=entry["category"],
+                        enabled=True,
+                        content_extractor=entry.get("content_extractor"),
+                    )
                 )
-            )
+            except (KeyError, TypeError) as e:
+                logger.warning("跳过缺字段的源条目(%s):%s", e, entry)
+                continue
     return sources
 
 
-def load_config(project_dir: Path | None) -> Config:
+def load_config(project_dir: Path | None = None, config_path: str | None = None) -> Config:
     """加载完整配置:data/config.json + categories/* + feeds/*。
 
-    project_dir=None 时回退到当前工作目录。
+    project_dir=None 时回退到当前工作目录。config_path 非空时覆盖默认 config.json 路径。
     """
-    if project_dir is None:
-        project_dir = Path.cwd()
-    else:
-        project_dir = Path(project_dir)
+    project_dir = Path.cwd() if project_dir is None else Path(project_dir)
 
     data_dir = project_dir / "data"
-    config_file = data_dir / "config.json"
+    config_file = Path(config_path) if config_path else data_dir / "config.json"
     if not config_file.exists():
         raise FileNotFoundError(f"Config file not found: {config_file}")
 
@@ -135,7 +123,6 @@ def load_config(project_dir: Path | None) -> Config:
         category_configs=category_configs,
         sources=sources,
         outputs=raw.get("outputs", {}),
-        # TODO: rsshub_base_url 未做 ${VAR} 展开,依赖 rss.py 二次 _expand_env,隐式依赖
-        rsshub_base_url=raw.get("rsshub_base_url"),
+        rsshub_base_url=expand_env(raw.get("rsshub_base_url")) if raw.get("rsshub_base_url") else None,
         data_dir=data_dir,
     )

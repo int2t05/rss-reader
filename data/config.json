@@ -4,63 +4,69 @@
     "model": "gpt-4o-mini",
     "api_key_env": "OPENAI_API_KEY",
     "base_url": null,
-    "analysis_concurrency": 5,
-    "throttle_sec": 0.0
+    "analysis_concurrency": 10
   },
   "rsshub_base_url": null,
   "categories": {
     "ai-research": {
       "enabled": true,
-      "display_name": {"en": "AI Research", "zh": "AI 研究"},
+      "display_name": "AI 研究",
       "threshold": 7.0,
       "digest_limit": 8,
       "children": ["ai-vendor", "ai-researcher", "ai-papers"]
     },
     "research": {
       "enabled": true,
-      "display_name": {"en": "Research Papers", "zh": "论文科研"},
+      "display_name": "论文科研",
       "threshold": 7.0,
       "digest_limit": 5,
-      "children": ["arxiv-cs", "arxiv-stat", "papers-other"]
+      "children": ["arxiv-cs", "arxiv-stat", "arxiv-other", "papers-other"]
     },
     "systems": {
       "enabled": true,
-      "display_name": {"en": "Systems Engineering", "zh": "系统工程"},
+      "display_name": "系统工程",
       "threshold": 5.0,
       "digest_limit": 5,
       "children": ["eng-blog", "framework", "cn-tech"]
     },
     "dev-community": {
       "enabled": true,
-      "display_name": {"en": "Developer Community", "zh": "开发者社区"},
+      "display_name": "开发者社区",
       "threshold": 5.0,
       "digest_limit": 5,
       "children": ["github-trending", "github-topics", "forums", "reddit"]
     },
     "tech-news": {
       "enabled": true,
-      "display_name": {"en": "Tech News", "zh": "科技资讯"},
+      "display_name": "科技资讯",
       "threshold": 4.0,
       "digest_limit": 5,
       "children": ["cn-news", "en-news"]
     },
     "self-built": {
       "enabled": true,
-      "display_name": {"en": "Self-built Sources", "zh": "自建源"},
+      "display_name": "自建源",
       "threshold": 4.0,
       "digest_limit": 3,
-      "children": ["fluxsift", "auto-trend"]
+      "children": ["auto-trend"]
+    },
+    "video": {
+      "enabled": true,
+      "display_name": "视频",
+      "threshold": 4.0,
+      "digest_limit": 3,
+      "children": ["bilibili", "youtube", "fluxsift"]
     },
     "finance": {
       "enabled": false,
-      "display_name": {"en": "Finance", "zh": "财经"},
+      "display_name": "财经",
       "threshold": 6.0,
       "digest_limit": 3,
       "children": []
     },
     "crypto": {
       "enabled": false,
-      "display_name": {"en": "Crypto", "zh": "加密货币"},
+      "display_name": "加密货币",
       "threshold": 6.0,
       "digest_limit": 3,
       "children": []

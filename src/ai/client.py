@@ -10,14 +10,32 @@ import logging
 import os
 from dataclasses import dataclass
 
-from openai import AsyncOpenAI
+from openai import APIConnectionError, APIStatusError, AsyncOpenAI, RateLimitError
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 logger = logging.getLogger(__name__)
+
+# 可重试的瞬时异常:连接/限流/5xx(4xx 认证/参数错误不重试)
+_RETRYABLE = (APIConnectionError, RateLimitError, TimeoutError)
+
+
+def _is_retryable(exc: Exception) -> bool:
+    """判断是否为可重试的瞬时错误:连接/限流/超时/5xx。"""
+    if isinstance(exc, _RETRYABLE):
+        return True
+    if isinstance(exc, APIStatusError) and exc.status_code >= 500:
+        return True
+    return False
 
 
 @dataclass
 class AIClientConfig:
-    """AI 客户端配置:provider + model + api_key_env + base_url + 并发/节流参数。
+    """AI 客户端配置:provider + model + api_key_env + base_url + 并发参数。
 
     示例:
         cfg = AIClientConfig(provider="openai", model="gpt-4o-mini", api_key_env="OPENAI_API_KEY")
@@ -28,7 +46,6 @@ class AIClientConfig:
     api_key_env: str
     base_url: str | None = None
     analysis_concurrency: int = 5
-    throttle_sec: float = 0.0
 
 
 class AIClient:
@@ -41,8 +58,6 @@ class AIClient:
     def __init__(self, config: AIClientConfig):
         """从 config 读取 API key(从 api_key_env 指定的环境变量),构造 AsyncOpenAI 客户端。"""
         self.config = config
-        # TODO: AIClientConfig.throttle_sec 从未消费,应在此处或调用方实现节流,或从配置删除
-        # TODO: AsyncOpenAI 未传 timeout 参数,默认 600s,Tier1 批量场景慢请求会阻塞 semaphore
         api_key = os.environ.get(config.api_key_env)
         if not api_key:
             raise ValueError(
@@ -53,27 +68,46 @@ class AIClient:
         self._client = AsyncOpenAI(
             api_key=api_key,
             base_url=config.base_url,
+            timeout=60.0,  # 避免 Tier1 并发场景慢请求阻塞 semaphore
         )
 
     async def complete(
         self,
-        system: str,
-        user: str,
+        system: str | None = None,
+        user: str | None = None,
+        *,
+        messages: list[dict] | None = None,
         temperature: float = 0.7,
         max_tokens: int | None = None,
     ) -> str:
-        """调用 LLM,返回文本响应(system + user 两条消息)。
+        """调用 LLM,返回文本响应。
+
+        两种调用方式:
+        - 单轮:传 system + user(Tier1/Tier2 分类、主题去重)
+        - 多轮:传 messages 列表(Tier3 ReAct,含 system/user/assistant/tool_result 真实角色)
 
         temperature: 0.7 默认(创造性),0 用于 JSON 修复重试。
         max_tokens: None 时由模型自行决定。
         """
-        response = await self._client.chat.completions.create(
-            model=self.config.model,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            temperature=temperature,
-            max_tokens=max_tokens,
-        )
-        return response.choices[0].message.content or ""
+        if messages is None:
+            messages = [
+                {"role": "system", "content": system or ""},
+                {"role": "user", "content": user or ""},
+            ]
+
+        # 网络重试:连接/限流/5xx 指数退避(最多 3 次),4xx 认证/参数错误不重试
+        async for attempt in AsyncRetrying(
+            stop=stop_after_attempt(3),
+            wait=wait_exponential(multiplier=1, min=1, max=10),
+            retry=retry_if_exception(_is_retryable),
+            reraise=True,
+        ):
+            with attempt:
+                response = await self._client.chat.completions.create(
+                    model=self.config.model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                )
+                return response.choices[0].message.content or ""
+        return ""  # 不可达(tenacity reraise 或 return 在循环内)

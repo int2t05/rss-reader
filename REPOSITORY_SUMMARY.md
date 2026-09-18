@@ -9,55 +9,47 @@ rss-reader 是个人信息聚合 + AI 总结系统,面向单人使用的批处�
 三段式 pipeline:
 
 ```
-feeds/*.yml (84 源)
+feeds/*.yml (168 源)
     ↓
-Source 层(RSSSource + build_source 工厂)
-    ↓ list[ContentItem] 200-500 条
-Tier 1: ContentClassifier — 单次 LLM 分类+打分
+Source 层(RSSSource + build_source 工厂,并发抓取,每源截断 30 条)
+    ↓ list[ContentItem] ~500-1000 条
+Tier 1: ContentClassifier — 单次 LLM 分类+打分+摘要(并发 10)
     ↓
-Tier 2: ContentSelector — URL 去重 + 阈值 + 主题去重 + 配额
+Tier 2: ContentSelector — URL 去重 + 阈值 + 批量主题去重(分块并发)+ 配额
     ↓ 30-50 条精选
-Tier 3: AgentLoop — 有界 ReAct max 10 步 + CRAG + SearchChain/FetchChain
-    ↓ AnalysisResult
-双语渲染 → 落盘 + GitHub Pages + Webhook
+中文日报渲染 → 落盘 + GitHub Pages + Webhook
 ```
 
 ## 关键组件
 
 | 组件 | 路径 | 职责 |
 |---|---|---|
-| Source 层 | `src/sources/` | RSS 抓取,RSSHub 路由,Source Protocol |
-| Tier 1 | `src/ai/classifier.py` | 单次 LLM 分类+打分,并发控制,JSON 修复重试 |
-| Tier 2 | `src/ai/selector.py` | URL 去重,分类感知阈值,主题去重,配额平衡 |
-| Tier 3 | `src/ai/agent/loop.py` | 有界 ReAct 循环,CRAG 评估,工具调用 |
-| 降级链 | `src/ai/agent/search_chain.py`、`fetch_chain.py` | Exa→DDG,Firecrawl→trafilatura→httpx |
-| SSRF 防护 | `src/ai/agent/ssrf.py` | validate_url 拒绝内网/云元数据 |
-| 渲染 | `src/render/` | Markdown 双语渲染 |
-| 发布 | `src/publish/` | GitHub Pages(Jekyll)+ Webhook(飞书/Slack/Discord/自定义) |
-| 存储 | `src/storage/` | SQLite 去重 + Markdown 总结落盘 |
+| Source 层 | `src/sources/` | RSS 抓取,RSSHub 路由,每源截断 30 条,Source Protocol |
+| Tier 1 | `src/ai/classifier.py` | 单次 LLM 分类+打分+摘要,并发 10,JSON 修复重试 |
+| Tier 2 | `src/ai/selector.py` | URL 去重,分类感知阈值,批量主题去重(分块并发),配额平衡 |
+| 渲染 | `src/render/` | Markdown 中文日报渲染 |
+| 发布 | `src/publish/` | GitHub Pages(Jekyll)+ Webhook(飞书/Slack/Discord/自定义,并发) |
+| 存储 | `src/storage/` | SQLite 去重(WAL)+ Markdown 总结落盘 |
 | 配置 | `src/config.py` | JSON + YAML 加载,${VAR} 展开 |
 
 ## 技术栈
 
-Python 3.12+ · uv · httpx · feedparser · pydantic v2 · openai SDK · ddgs · trafilatura · rich · PyYAML · python-dotenv · sqlite3
-
-可选:exa-py(语义搜索)· firecrawl-py(JS 渲染抓取)
+Python 3.12+ · uv · httpx · feedparser · pydantic v2 · openai SDK · tenacity · rich · PyYAML · python-dotenv · sqlite3
 
 ## 数据流
 
 1. `load_config` 加载 `data/config.json` + `feeds/*.yml` + `categories/*/category.json`
-2. `_fetch_all_items` 顺序抓取所有 enabled 源,返回 `list[ContentItem]`
-3. `ContentClassifier.classify_batch` 并发单次 LLM 调用,原地填充 `item.processing.analysis`
+2. `_fetch_all_items` 用 `asyncio.gather` 并发抓取所有 enabled 源,每源截断 30 条,DedupStore 过滤已处理项,返回 `list[ContentItem]`
+3. `ContentClassifier.classify_batch` 并发 10 单次 LLM 调用,原地填充 `item.processing.analysis`(分类+分数+摘要)
 4. `ContentSelector.select` 四步选取,返回 30-50 条精选
-5. `AgentLoop.run` 对每条精选跑有界 ReAct 循环,填充 `item.processing.deep_analysis`
-6. `render_bilingual` 渲染中英两份 Markdown
-7. `SummaryStore.save_bilingual` 落盘 + `GitHubPagesPublisher` + `WebhookPublisher` 发布
+5. `render_markdown` 渲染中文 Markdown 日报
+6. `SummaryStore.save` 落盘 + `GitHubPagesPublisher` + `WebhookPublisher` 发布 + DedupStore 标记已处理
 
 ## 配置
 
 - `data/config.json`:主配置(AI provider、分类、输出)
-- `feeds/*.yml`:RSS 源配置(6 文件,84 源)
-- `categories/*/category.json`:分类配置(8 分类,6 enabled + 2 预留)
+- `feeds/*.yml`:RSS 源配置(7 文件,168 源)
+- `categories/*/category.json`:分类配置(9 分类,7 enabled + 2 预留)
 - `.env`:API key 与自建源 URL
 
 ## 测试

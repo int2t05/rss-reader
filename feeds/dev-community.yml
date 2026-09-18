@@ -1,5 +1,5 @@
-# 开发者社区:GitHub Trending + 论坛 + Reddit(20 源)
-# 迁移自 rss-feed/config.txt community 分类,舍弃 V2EX/LinuxDo/掘金/博客园/开源中国
+# 开发者社区:GitHub Trending + 论坛 + Reddit(20+ 源)
+# 迁移自 rss-feed/config.txt community 分类,补回 V2EX/掘金/博客园/开源中国/LinuxDo
 # RSSHub 路由(/ 开头)需配置 RSSHUB_BASE_URL,未配置时自动跳过
 - name: GitHub Trending Python
   url: /github/trending/daily/python
@@ -53,6 +53,22 @@
   url: https://www.reddit.com/r/MachineLearning/hot.rss
   category: dev-community/reddit
 
+- name: Reddit webdev
+  url: https://www.reddit.com/r/webdev/hot.rss
+  category: dev-community/reddit
+
+- name: Reddit rust
+  url: https://www.reddit.com/r/rust/hot.rss
+  category: dev-community/reddit
+
+- name: Reddit golang
+  url: https://www.reddit.com/r/golang/hot.rss
+  category: dev-community/reddit
+
+- name: Reddit python
+  url: https://www.reddit.com/r/python/hot.rss
+  category: dev-community/reddit
+
 - name: Product Hunt
   url: https://producthunt.com/feed
   category: dev-community/forums
@@ -79,4 +95,24 @@
 
 - name: Stack Overflow
   url: https://stackoverflow.com/feeds
+  category: dev-community/forums
+
+- name: LinuxDo
+  url: https://linux.do/latest.rss
+  category: dev-community/forums
+
+- name: V2EX 热门
+  url: /v2ex/topics/hot
+  category: dev-community/forums
+
+- name: 掘金 AI 周榜
+  url: /juejin/trending/ai/weekly
+  category: dev-community/forums
+
+- name: 博客园精选
+  url: /cnblogs/pick
+  category: dev-community/forums
+
+- name: 开源中国
+  url: /oschina/news
   category: dev-community/forums
