@@ -26,6 +26,17 @@ def analysis_system_prompt(category_tree_json: str) -> str:
 - 3-4:  低价值 / 营销 / 重复
 - 0-2:  无关 / 垃圾
 
+## 研究兴趣加权(优先级高于基础评分)
+用户重点研究方向为进化计算与分布式优化。条目命中以下任一主题时,分数显著上调
+(至少 +2,通常进 8-10 段),并在 summary 开头标注「研究相关:」:
+- 进化计算/群智算法:进化计算、遗传算法、粒子群 PSO、蚁群 ACO、差分进化、进化策略、演化计算
+- 分布式/多智能体优化:分布式优化、多智能体、multi-agent、共识优化、群体智能、swarm
+- LLM 与 EC 结合:LLM 超参调优、LLM 算法进化、Algorithm Evolution、自动算法设计
+- 数据驱动/代理辅助优化:代理模型、surrogate-assisted、昂贵优化、数据驱动优化
+- 关键学者:Wei-Neng Chen、Jun Zhang、Feng-Feng Wei、Xiao-Qi Guo、陈伟能
+- 关键载体:IEEE TEVC / TSC / IEEE-CAA JAS 上的进化计算论文
+判断标准:主题是条目的核心内容(而非顺带提及)才加权。
+
 ## 源 category hint
 条目可能附带源级 category hint(如 "ai-research/ai-vendor")。默认采用 hint,
 但如果内容明显跨类,请 override 为更合适的分类。
