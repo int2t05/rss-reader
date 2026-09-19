@@ -37,9 +37,8 @@ env/
 .coverage
 htmlcov/
 
-# Runtime data (per project CLAUDE.md, summaries + dedup are runtime state)
+# Runtime data(summaries 本地状态;dedup.db 是消费位点,入库随管道提交持久化)
 data/summaries/
-data/dedup.db
 data/dedup.db-journal
 data/dedup.db-wal
 data/dedup.db-shm
