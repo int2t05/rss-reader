@@ -1,6 +1,6 @@
 # rss-reader
 
-> 个人信息聚合 + AI 总结系统 — RSS × 三段式 pipeline × 有界 ReAct agent
+> 个人信息聚合 + AI 总结系统 — RSS × 两段式 pipeline × GitHub Pages(Chirpy)
 
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/uv-4B275F?style=flat-square&logo=uv&logoColor=white)](https://github.com/astral-sh/uv)
@@ -32,11 +32,10 @@ uv run rss-reader --hours 24
 uv run rss-reader --fetch-only --hours 24
 uv run rss-reader --classify-only --hours 24 --limit 10
 uv run rss-reader --select-only --hours 24 --limit 15
-uv run rss-reader --analyze-one <item_id> --hours 24
 uv run rss-reader --hours 24 --no-publish
 
 # 测试(无 mock,真实数据)
-uv run pytest
+uv run python -m pytest
 ```
 
 ## 架构
@@ -44,7 +43,8 @@ uv run pytest
 ```mermaid
 flowchart LR
     FEEDS[feeds/*.yml<br/>168 源] --> SRC[Source 层<br/>RSSSource 并发抓取]
-    SRC --> T1[Tier 1<br/>分类+打分+摘要 单次 LLM]
+    SRC --> DEDUP[DedupStore<br/>跨轮去重]
+    DEDUP --> T1[Tier 1<br/>分类+打分+摘要 单次 LLM]
     T1 --> T2[Tier 2<br/>选取+去重 批量主题去重]
     T2 --> RND[中文日报渲染]
     RND --> OUT[GitHub Pages<br/>Webhook<br/>data/summaries/]
@@ -67,8 +67,10 @@ flowchart LR
 
 ## 项目方向
 
-- **全文抽取**:`content_extractor` 字段已定义,未消费
+- **全文抽取**:`content_extractor` 字段已定义,接入 trafilatura 全文提取
 - **Email 发布 / 钉钉 Webhook**
+- **跨日趋势**:SQLite FTS5 全文检索历史简报,识别跨日热点
+- **Chirpy 自定义**:首页改为日报卡片墙,暗色默认
 
 完整 TODO 见 `docs/TODO.md`。
 
@@ -76,15 +78,11 @@ flowchart LR
 
 | 文档 | 说明 |
 |---|---|
-| `docs/PRD.md` | 产品需求 |
-| `docs/TECH.md` | 技术方案 |
-| `docs/API/README.md` | CLI 接口 + 配置 schema + 数据模型 |
-| `docs/FLOW/README.md` | 业务流程 + 数据流 |
+| `docs/PRD.md` | 产品需求(定位、用户故事、分类树、验收标准) |
+| `docs/TECH.md` | 技术方案(架构图、模块接口、数据流、存储) |
+| `docs/API/README.md` | CLI 接口、配置 schema、数据模型 |
+| `docs/FLOW/README.md` | 业务流程 mermaid 图 + 详细数据流描述 |
 | `docs/TODO.md` | 不足与未来方向 |
-
-## 贡献
-
-欢迎 issue 与 PR。请先阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## License
 
