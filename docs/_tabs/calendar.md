@@ -3,7 +3,6 @@ layout: page
 title: 日历
 icon: fas fa-calendar-days
 order: 1
-permalink: /calendar/
 ---
 
 <div class="calendar-card">
