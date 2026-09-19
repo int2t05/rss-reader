@@ -3,35 +3,27 @@
 
 # YouTube 直链(立即可用)
 - name: Two Minute Papers
-  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFbfYPyITQ-7lupoD7IJ_ZA
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7lupoX8nvctg
   category: video/youtube
 
 - name: 3Blue1Brown
-  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFYO_jab_esuRTT54ljmlizA
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw
   category: video/youtube
 
 - name: Fireship
-  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFsBjURrPoezykLs86EqCGJw
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCsBjURrPoezykLs9EqgamOA
   category: video/youtube
 
 - name: ThePrimeagen
-  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULF8ENHE6xdFuwLrH2eyUikMQ
-  category: video/youtube
-
-- name: IBM Technology
-  url: https://www.youtube.com/feeds/videos.xml?playlist_id=UULFKWaEZ-_VmcTdDP4OcN62RA
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UC8ENHE5xdFSwx71u3fDH5Xw
   category: video/youtube
 
 - name: Yannic Kilcher
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCm94SB0Dbg
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew
   category: video/youtube
 
 - name: Computerphile
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7J4wpNw
-  category: video/youtube
-
-- name: The Coding Train
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCvjgXvBlNQHnpz5itk7mGZw
+  url: https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA
   category: video/youtube
 
 # B 站 UP 主(RSSHub 路由,需配置 RSSHUB_BASE_URL)
