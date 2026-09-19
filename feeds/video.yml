@@ -32,6 +32,10 @@
   url: /bilibili/user/video/316183842
   category: video/bilibili
 
+- name: 奇乐编程学院
+  url: /bilibili/user/video/372313671
+  category: video/bilibili
+
 - name: 技术蛋老师
   url: /bilibili/user/video/327247876
   category: video/bilibili
@@ -52,6 +56,10 @@
   url: /bilibili/user/video/43231611
   category: video/bilibili
 
+- name: 飞叶程序员
+  url: /bilibili/user/video/443094046
+  category: video/bilibili
+
 - name: AnthonyFu
   url: /bilibili/user/video/668380
   category: video/bilibili
@@ -62,6 +70,18 @@
 
 - name: Go夜读
   url: /bilibili/user/video/326749661
+  category: video/bilibili
+
+- name: 遇见狂神说
+  url: /bilibili/user/video/95256449
+  category: video/bilibili
+
+- name: 刘丹冰Aceld
+  url: /bilibili/user/video/373073810
+  category: video/bilibili
+
+- name: 面向加薪学习
+  url: /bilibili/user/video/375038855
   category: video/bilibili
 
 - name: CodeSheep

@@ -15,7 +15,15 @@ timezone: Asia/Shanghai
 # 头像(GitHub avatar,消除左侧空白头像)
 avatar: "https://avatars.githubusercontent.com/u/162337178?v=4"
 
-# 文章页右侧 TOC(大纲)
+# 头像点击跳转 GitHub 主页
+social:
+  name: int2t05
+  email:
+  links:
+    - GitHub: https://github.com/int2t05
+      icon: fab fa-github
+
+# 文章页 TOC 大纲(右侧 panel 显示 h2/h3 大纲)
 toc: true
 
 # Chirpy 主题(gem 形式,需 Actions 构建)

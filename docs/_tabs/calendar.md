@@ -31,26 +31,26 @@ order: 1
 </div>
 
 <style>
-.calendar-card { max-width: 460px; background: var(--chip-bg, #f8f9fa); border: 1px solid var(--main-border, #dee2e6); border-radius: 16px; padding: 28px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04); }
+.calendar-card { max-width: 460px; background: var(--card-bg); border: 1px solid var(--main-border); border-radius: 16px; padding: 28px; box-shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04); }
 .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.cal-title { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 600; }
-.cal-select { font: inherit; font-weight: 600; background: var(--chip-bg, #f1f3f5); border: 1px solid transparent; border-radius: 10px; padding: 5px 10px; cursor: pointer; outline: none; }
-.cal-select:focus { border-color: var(--btn-border, #2a8df1); }
-.cal-sep { user-select: none; opacity: .6; }
-.cal-nav-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; border-radius: 10px; background: transparent; color: var(--text-muted, #6c757d); cursor: pointer; }
-.cal-nav-btn:hover { background: var(--chip-bg, #f1f3f5); }
+.cal-title { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 600; color: var(--text-color); }
+.cal-select { font: inherit; font-weight: 600; color: var(--text-color); background: var(--card-bg); border: 1px solid var(--main-border); border-radius: 10px; padding: 5px 10px; cursor: pointer; outline: none; }
+.cal-select:focus { border-color: var(--btn-bg); }
+.cal-sep { user-select: none; color: var(--text-muted-color); }
+.cal-nav-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; border-radius: 10px; background: transparent; color: var(--text-muted-color); cursor: pointer; }
+.cal-nav-btn:hover { background: var(--btn-border); color: var(--text-color); }
 .calendar-weekdays { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; margin-bottom: 10px; }
-.calendar-weekdays span { font-size: 11px; font-weight: 600; opacity: .6; padding: 6px 0; }
+.calendar-weekdays span { font-size: 11px; font-weight: 600; color: var(--text-muted-color); padding: 6px 0; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
-.cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; border-radius: 10px; text-decoration: none; transition: all .15s; position: relative; }
-.cal-day.in-month { opacity: .85; }
-.cal-day.has-report { color: #fff; background: var(--btn-bg, #2a8df1); font-weight: 600; box-shadow: 0 1px 3px rgba(42,141,241,.25); }
+.cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 15px; color: var(--text-muted-color); border-radius: 10px; text-decoration: none; transition: all .15s; position: relative; }
+.cal-day.in-month { color: var(--text-color); }
+.cal-day.has-report { color: #fff; background: var(--btn-bg); font-weight: 600; box-shadow: 0 1px 3px rgba(42,141,241,.25); }
 .cal-day.has-report:hover { transform: scale(1.08); filter: brightness(.92); }
-.cal-day.today { box-shadow: inset 0 0 0 2px var(--btn-bg, #2a8df1); }
+.cal-day.today { box-shadow: inset 0 0 0 2px var(--btn-bg); }
 .cal-day.empty { visibility: hidden; }
-.calendar-legend { display: flex; align-items: center; gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--main-border, #dee2e6); font-size: 12px; opacity: .7; }
-.legend-dot { width: 10px; height: 10px; border-radius: 5px; background: var(--btn-bg, #2a8df1); display: inline-block; }
-.legend-dot.legend-today { background: transparent; box-shadow: inset 0 0 0 2px var(--btn-bg, #2a8df1); }
+.calendar-legend { display: flex; align-items: center; gap: 8px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--main-border); font-size: 12px; color: var(--text-muted-color); }
+.legend-dot { width: 10px; height: 10px; border-radius: 5px; background: var(--btn-bg); display: inline-block; }
+.legend-dot.legend-today { background: transparent; box-shadow: inset 0 0 0 2px var(--btn-bg); }
 </style>
 
 <script>
