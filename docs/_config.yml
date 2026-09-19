@@ -73,7 +73,6 @@ exclude:
   - PRD.md
   - TECH.md
   - TODO.md
-  - audit/
   - Gemfile
   - Gemfile.lock
   - node_modules
