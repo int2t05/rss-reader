@@ -4,15 +4,15 @@
 
 ```mermaid
 flowchart TB
-    START([uv run rss-reader --hours 24]) --> LOAD[load_config<br/>config.json + feeds/*.yml + categories/*]
-    LOAD --> FETCH[_fetch_all_items<br/>asyncio.gather 并发抓取]
-    FETCH --> DEDUP[DedupStore.batch_unprocessed<br/>过滤已处理 item_id]
+    START([uv run rss-reader]) --> LOAD[load_config<br/>config.json + feeds/*.yml + categories/*]
+    LOAD --> FETCH[_gather_fetches<br/>asyncio.gather 消费 feed 队列]
+    FETCH --> DEDUP[DedupStore 过滤已消费<br/>每源截前 30 条(每日上限)]
     DEDUP --> T1[ContentClassifier.classify_batch<br/>Tier1: 单次 LLM 分类+打分+摘要]
     T1 --> T2[ContentSelector.select<br/>Tier2: 选取+去重]
     T2 --> RND[render_markdown<br/>中文日报]
     RND --> SUM[SummaryStore.save<br/>data/summaries/]
     RND --> PUB[_publish<br/>Pages + Webhook]
-    PUB --> MARK[DedupStore.mark_processed<br/>跨轮去重]
+    PUB --> MARK[DedupStore.mark_processed<br/>推进消费位点]
     MARK --> DONE([Pipeline complete])
 ```
 
@@ -90,7 +90,7 @@ flowchart LR
 
 **数据流**:`parse_category_config`(共享函数)合并 category.json 覆盖 raw,过滤 enabled=False。`config.py._load_category_configs` 与 `CategoryRegistry.load_from_raw` 共享此逻辑,不重复解析。
 
-## Source 抓取
+## Source 消费(feed 队列)
 
 ```mermaid
 flowchart TB
@@ -101,14 +101,14 @@ flowchart TB
     HASBASE -->|否| SKIP[返回 None,跳过]
     MERGE --> RSS[RSSSource]
     ISRSSHUB -->|否| RSS
-    RSS --> FETCH[fetch since]
+    RSS --> FETCH[fetch 无参<br/>feed 全量,无时间窗]
     FETCH --> HTTP[httpx.get feed_url<br/>trust_env=False]
     HTTP --> PARSE[feedparser.parse]
     PARSE --> ENTRY{每条 entry}
     ENTRY --> DATE[_parse_date<br/>published → updated → created<br/>带时区回退]
-    DATE -->|>= since| ITEM[ContentItem]
-    DATE -->|< since 或 None| SKIP2[跳过]
+    DATE -->|有日期| ITEM[ContentItem]
+    DATE -->|无日期| SKIP2[跳过]
     ITEM --> LIST[items.append]
 ```
 
-**数据流**:输入 `RSSSourceConfig` + `since: datetime`,输出 `list[ContentItem]`。全量返回(不截断),`DedupStore` 保证每条目恰好处理一次。
+**数据流**:输入 `RSSSourceConfig`,输出 `list[ContentItem]`(feed 全量)。已消费判定与每日上限由编排层做(`_fetch_all_items`),不在 Source 层。

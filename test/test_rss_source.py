@@ -2,7 +2,6 @@
 
 非 mock:抓取真实公开 RSS feed(hnrss.org / github.blog),验证端到端。
 """
-from datetime import datetime, timedelta, timezone
 
 import httpx
 import pytest
@@ -63,8 +62,7 @@ async def test_fetch_real_rss_returns_content_items(http_client: httpx.AsyncClie
         category="dev-community/forums",
     )
     src = RSSSource(cfg, http_client)
-    since = datetime.now(timezone.utc) - timedelta(days=7)
-    items = await src.fetch(since)
+    items = await src.fetch()
     assert len(items) > 0, "hnrss.org frontpage 应返回非空条目"
     first = items[0]
     assert isinstance(first, ContentItem)
@@ -72,22 +70,7 @@ async def test_fetch_real_rss_returns_content_items(http_client: httpx.AsyncClie
     assert first.title
     assert first.url.startswith("http")
     assert first.published_at is not None
-    assert first.published_at >= since
     assert first.metadata.get("feed_name") == "Hacker News"
-
-
-@pytest.mark.network
-async def test_fetch_respects_since_filter(http_client: httpx.AsyncClient):
-    """since 过滤:传未来时间,应返回空列表。"""
-    cfg = RSSSourceConfig(
-        name="HN Future",
-        url="https://hnrss.org/frontpage",
-        category="dev-community/forums",
-    )
-    src = RSSSource(cfg, http_client)
-    future = datetime.now(timezone.utc) + timedelta(days=365)
-    items = await src.fetch(future)
-    assert items == [], "future since 应过滤掉所有条目"
 
 
 @pytest.mark.network
@@ -99,7 +82,7 @@ async def test_fetch_invalid_url_returns_empty_not_raises(http_client: httpx.Asy
         category="test/sub",
     )
     src = RSSSource(cfg, http_client)
-    items = await src.fetch(datetime.now(timezone.utc) - timedelta(days=1))
+    items = await src.fetch()
     assert items == []
 
 
@@ -126,8 +109,7 @@ async def test_fetch_arxiv_cs_ai_returns_items(http_client: httpx.AsyncClient):
         category="research/arxiv-cs",
     )
     src = RSSSource(cfg, http_client)
-    since = datetime.now(timezone.utc) - timedelta(days=1)
-    items = await src.fetch(since)
+    items = await src.fetch()
     # arXiv RSS 可能为空(新论文每日更新),但抓取不应抛异常
     for it in items:
         assert it.source_type == SourceType.RSS

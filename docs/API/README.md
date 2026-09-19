@@ -7,26 +7,25 @@ rss-reader 是批处理 CLI,无 HTTP 服务。本文档化 CLI 接口、配置 s
 ### 完整 pipeline(默认)
 
 ```bash
-uv run rss-reader --hours 24
+uv run rss-reader
 ```
 
-抓取 → Tier1 → Tier2 → 渲染 → 落盘 → 发布。
+消费 RSS 队列(每源每日上限 30 条,断点续传)→ Tier1 → Tier2 → 渲染 → 落盘 → 发布。
 
 ### 分阶段
 
 | 命令 | 说明 | 关键参数 |
 |---|---|---|
 | `--check-config` | 验证配置,输出分类树与源数量 | - |
-| `--fetch-only` | 仅抓取,输出每源条目数 | `--hours N` |
-| `--classify-only` | Tier1 分类+打分+摘要 | `--hours N`, `--limit N` |
-| `--select-only` | Tier1 + Tier2 选取 | `--hours N`, `--limit N` |
+| `--fetch-only` | 队列全貌,输出每源条目数 | - |
+| `--classify-only` | Tier1 分类+打分+摘要 | `--limit N` |
+| `--select-only` | Tier1 + Tier2 选取 | `--limit N` |
 | `--no-publish` | 跳过发布,仅落盘 | 与默认 pipeline 合用 |
 
 ### 全局参数
 
 | 参数 | 默认 | 说明 |
 |---|---|---|
-| `--hours N` | 24 | 抓取最近 N 小时 |
 | `-d, --project-dir PATH` | 当前目录 | 项目根(含 data/、categories/、feeds/) |
 | `-c, --config PATH` | `data/config.json` | 自定义 config 路径 |
 | `-l, --log-level LEVEL` | WARNING | DEBUG/INFO/WARNING/ERROR/CRITICAL |

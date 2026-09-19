@@ -14,7 +14,7 @@
 
 ### 已实现
 
-- RSS 聚合:任意 RSS/Atom,`${VAR}` 展开,可选 RSSHub 路由,抓取窗口内全量
+- RSS 聚合:任意 RSS/Atom,`${VAR}` 展开,可选 RSSHub 路由;feed 即消息队列(无时间窗过滤),每源每日消费上限 30 条,断点续传
 - 分类体系:7 大类 + 子类,分类感知阈值 + 配额平衡
 - Tier 1:单次 LLM 分类 + 打分 + 摘要(合并调用,并发 10)
 - Tier 2:URL 去重 + 分类阈值 + 批量主题去重 + 配额平衡(零 AI)
@@ -68,7 +68,7 @@ flowchart LR
 ## 验收标准
 
 - `uv run rss-reader --check-config` 输出分类树与源数量
-- `uv run rss-reader --hours 24` 完整 pipeline,产出 `data/summaries/` 与 `docs/_posts/`
+- `uv run rss-reader` 完整 pipeline,产出 `data/summaries/` 与 `docs/_posts/`
 - `uv run python -m pytest` 全量通过(无 mock,真实数据)
 - 日 LLM 调用 < 1000 次
 - GitHub Actions daily.yml 跑通,pages-deploy.yml 构建部署 Chirpy 站点

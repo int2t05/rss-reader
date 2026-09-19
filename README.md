@@ -19,20 +19,20 @@
 uv sync --extra dev
 cp .env.example .env  # 填入 OPENAI_API_KEY(必填)
 uv run rss-reader --check-config
-uv run rss-reader --hours 24
+uv run rss-reader
 ```
 
 ## 使用
 
 ```bash
 # 完整 pipeline(默认)
-uv run rss-reader --hours 24
+uv run rss-reader
 
 # 分阶段
-uv run rss-reader --fetch-only --hours 24
-uv run rss-reader --classify-only --hours 24 --limit 10
-uv run rss-reader --select-only --hours 24 --limit 15
-uv run rss-reader --hours 24 --no-publish
+uv run rss-reader --fetch-only
+uv run rss-reader --classify-only --limit 10
+uv run rss-reader --select-only --limit 15
+uv run rss-reader --no-publish
 
 # 测试(无 mock,真实数据)
 uv run python -m pytest
@@ -51,7 +51,7 @@ flowchart LR
 ```
 
 **两段式 pipeline**:
-- **Tier 1**(全量):抓取窗口内全部条目(DedupStore 过滤已处理),单次 LLM 分类 + 打分 + 摘要,并发 10
+- **Tier 1**(队列消费):每源每日消费未处理条目上限 30 条(DedupStore 为消费位点,断点续传),单次 LLM 分类 + 打分 + 摘要,并发 10
 - **Tier 2**(零 AI):URL 去重 + 分类感知阈值 + 批量主题去重(分块并发)+ 配额平衡
 
 ## 功能

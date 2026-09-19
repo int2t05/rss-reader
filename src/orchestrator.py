@@ -1,5 +1,6 @@
-"""两段式 pipeline 编排:抓取 → Tier1 分类+打分+摘要 → Tier2 选取+去重 → 渲染日报 → 落盘+发布。
+"""两段式 pipeline 编排:消费 RSS 队列 → Tier1 分类+打分+摘要 → Tier2 选取+去重 → 渲染日报 → 落盘+发布。
 
+RSS feed 即消息队列,DedupStore 即消费位点(断点续传),每源每日消费上限控制成本。
 从 CLI 入口(main.py)抽出纯编排逻辑,便于测试与复用。各 run_* 子命令对应 CLI 子命令。
 """
 
@@ -8,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -32,6 +33,10 @@ logger = logging.getLogger(__name__)
 console = Console()  # 结果输出走 stdout,便于管道
 err_console = Console(stderr=True)  # 进度/告警走 stderr
 
+# 每源每日处理上限:RSS feed 是消息队列,DedupStore 是消费位点;
+# 超出上限的未处理条目留在队列里,下次运行继续消费(断点续传)。
+_MAX_PER_SOURCE_PER_RUN = 30
+
 
 def _build_registry(cfg: Config, http_client: httpx.AsyncClient) -> SourceRegistry:
     """从配置构建 SourceRegistry:RSSHub 路由源根据 rsshub_base_url 决定跳过或解析。"""
@@ -43,40 +48,42 @@ def _build_registry(cfg: Config, http_client: httpx.AsyncClient) -> SourceRegist
     return registry
 
 
-async def _fetch_all_items(cfg: Config, hours: int, dedup_store: DedupStore | None = None) -> list:
-    """并发抓取所有源,返回合并后的 ContentItem 列表。单源失败不中断。
+async def _fetch_all_items(cfg: Config, dedup_store: DedupStore | None = None) -> list:
+    """消费 RSS 消息队列:每源取未处理条目的前 _MAX_PER_SOURCE_PER_RUN 条。
 
-    dedup_store 非空时,抓取后过滤已处理项(跨轮去重,省 AI 调用)。
+    RSS feed 即队列(自带条目保留),DedupStore 即消费位点(已处理记录)。
+    每源每日上限控制 Tier1 成本;超限条目不标记,下次运行从位点继续。
+    单源失败不中断。
     """
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
     async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
         registry = _build_registry(cfg, client)
-        items = await _gather_fetches(registry, since)
+        per_source = await _gather_fetches(registry)
 
-    if dedup_store is not None and items:
-        item_ids = [it.id for it in items]
-        unprocessed = set(dedup_store.batch_unprocessed(item_ids))
-        before = len(items)
-        items = [it for it in items if it.id in unprocessed]
-        if before != len(items):
-            logger.info("Dedup filtered %d already-processed items", before - len(items))
+    items: list = []
+    for source_items in per_source:
+        if dedup_store is not None and source_items:
+            item_ids = [it.id for it in source_items]
+            unprocessed = set(dedup_store.batch_unprocessed(item_ids))
+            source_items = [it for it in source_items if it.id in unprocessed]
+        items.extend(source_items[:_MAX_PER_SOURCE_PER_RUN])
     return items
 
 
-async def _gather_fetches(registry: SourceRegistry, since: datetime) -> list:
-    """并发执行所有源 fetch,合并结果,单源失败记 warning 跳过。"""
+async def _gather_fetches(registry: SourceRegistry) -> list[list]:
+    """并发执行所有源 fetch,返回按源分组的条目列表。单源失败记 warning 返回空组。"""
     sources = registry.all()
     results = await asyncio.gather(
-        *(source.fetch(since) for source in sources),
+        *(source.fetch() for source in sources),
         return_exceptions=True,
     )
-    all_items = []
+    per_source: list[list] = []
     for source, result in zip(sources, results, strict=True):
         if isinstance(result, Exception):
             logger.warning("Source %s failed: %s", source.category, result)
-            continue
-        all_items.extend(result)
-    return all_items
+            per_source.append([])
+        else:
+            per_source.append(result)
+    return per_source
 
 
 def _build_ai_client(cfg: Config) -> AIClient:
@@ -132,7 +139,7 @@ def run_check_config(project_dir: Path | None, config_path: str | None = None) -
     return 0
 
 
-async def run_fetch_only(project_dir: Path | None, hours: int, config_path: str | None = None) -> int:
+async def run_fetch_only(project_dir: Path | None, config_path: str | None = None) -> int:
     """--fetch-only:并发抓取所有源,输出每源条目数与总数,返回退出码。"""
     try:
         cfg = load_config(project_dir, config_path)
@@ -140,7 +147,6 @@ async def run_fetch_only(project_dir: Path | None, hours: int, config_path: str 
         err_console.print(f"[red]Config error:[/red] {e}")
         return 1
 
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
     total = 0
     async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
         registry = _build_registry(cfg, client)
@@ -151,14 +157,14 @@ async def run_fetch_only(project_dir: Path | None, hours: int, config_path: str 
         per_source: list[tuple[str, int]] = []
         for source in registry.all():
             try:
-                items = await source.fetch(since)
+                items = await source.fetch()
                 per_source.append((source.config.name if hasattr(source, "config") else source.category, len(items)))
                 total += len(items)
             except Exception as e:
                 logger.warning("Source %s failed: %s", source.category, e)
                 per_source.append((source.category, 0))
 
-    table = Table(title=f"Fetched in last {hours}h")
+    table = Table(title="Fetched from feed queue")
     table.add_column("Source", style="cyan")
     table.add_column("Items", style="green", justify="right")
     for name, count in per_source:
@@ -169,7 +175,7 @@ async def run_fetch_only(project_dir: Path | None, hours: int, config_path: str 
 
 
 async def run_classify_only(
-    project_dir: Path | None, hours: int, limit: int | None, config_path: str | None = None
+    project_dir: Path | None, limit: int | None, config_path: str | None = None
 ) -> int:
     """--classify-only:抓取 → Tier1 分类+打分,输出结果表格。"""
     try:
@@ -178,7 +184,7 @@ async def run_classify_only(
         err_console.print(f"[red]Config error:[/red] {e}")
         return 1
 
-    items = await _fetch_all_items(cfg, hours)
+    items = await _fetch_all_items(cfg)
     if not items:
         err_console.print("[yellow]No items fetched.[/yellow]")
         return 0
@@ -211,7 +217,7 @@ async def run_classify_only(
 
 
 async def run_select_only(
-    project_dir: Path | None, hours: int, limit: int | None, config_path: str | None = None
+    project_dir: Path | None, limit: int | None, config_path: str | None = None
 ) -> int:
     """--select-only:抓取 → Tier1 分类+打分 → Tier2 选取+去重,输出精选结果表格。"""
     try:
@@ -220,7 +226,7 @@ async def run_select_only(
         err_console.print(f"[red]Config error:[/red] {e}")
         return 1
 
-    items = await _fetch_all_items(cfg, hours)
+    items = await _fetch_all_items(cfg)
     if not items:
         err_console.print("[yellow]No items fetched.[/yellow]")
         return 0
@@ -266,14 +272,14 @@ async def run_select_only(
 
 async def run_pipeline(
     project_dir: Path | None,
-    hours: int,
     no_publish: bool,
     limit: int | None,
     config_path: str | None = None,
 ) -> int:
-    """完整 pipeline:抓取 → Tier1 分类+打分+摘要 → Tier2 选取+去重 → 渲染日报 → 落盘 + 发布。
+    """完整 pipeline:消费队列 → Tier1 分类+打分+摘要 → Tier2 选取+去重 → 渲染日报 → 落盘 + 发布。
 
-    --no-publish 跳过发布,仅落盘到 data/summaries/。
+    每源消费未处理条目的前 _MAX_PER_SOURCE_PER_RUN 条,处理后标记(消费位点),
+    超限条目下次运行继续。--no-publish 跳过发布,仅落盘到 data/summaries/。
     """
     try:
         cfg = load_config(project_dir, config_path)
@@ -281,7 +287,7 @@ async def run_pipeline(
         err_console.print(f"[red]Config error:[/red] {e}")
         return 1
 
-    items = await _fetch_all_items(cfg, hours, dedup_store=_dedup_store(project_dir))
+    items = await _fetch_all_items(cfg, dedup_store=_dedup_store(project_dir))
     if not items:
         err_console.print("[yellow]No items fetched.[/yellow]")
         return 0

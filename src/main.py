@@ -1,16 +1,17 @@
 """CLI 入口:argparse 解析参数,分发到 --check-config / --fetch-only / --classify-only
 / --select-only / 完整 pipeline。
 
-编排逻辑见 src/orchestrator.py。本模块仅负责参数解析与子命令分发。
+RSS feed 即消息队列(不按时间窗口过滤),DedupStore 即消费位点(断点续传),
+每源每日消费上限由编排层控制。编排逻辑见 src/orchestrator.py。
 
 示例:
     uv run rss-reader --check-config
-    uv run rss-reader --fetch-only --hours 24
-    uv run rss-reader --classify-only --hours 24 --limit 10
-    uv run rss-reader --select-only --hours 24 --limit 15
-    uv run rss-reader --hours 24 --log-level DEBUG
-    uv run rss-reader --hours 24                       # 完整 pipeline(默认)
-    uv run rss-reader --hours 24 --no-publish          # 完整 pipeline,跳过发布
+    uv run rss-reader --fetch-only
+    uv run rss-reader --classify-only --limit 10
+    uv run rss-reader --select-only --limit 15
+    uv run rss-reader --log-level DEBUG
+    uv run rss-reader                                # 完整 pipeline(默认)
+    uv run rss-reader --no-publish                   # 完整 pipeline,跳过发布
 """
 
 from __future__ import annotations
@@ -38,7 +39,6 @@ def build_parser() -> argparse.ArgumentParser:
         prog="rss-reader",
         description="Personal information aggregation and AI summary system.",
     )
-    parser.add_argument("--hours", type=int, default=24, help="Fetch from last N hours (default: 24)")
     parser.add_argument(
         "-d",
         "--project-dir",
@@ -92,16 +92,16 @@ def main(argv: list[str] | None = None) -> int:
         return run_check_config(project_dir, args.config)
 
     if args.fetch_only:
-        return asyncio.run(run_fetch_only(project_dir, args.hours, args.config))
+        return asyncio.run(run_fetch_only(project_dir, args.config))
 
     if args.classify_only:
-        return asyncio.run(run_classify_only(project_dir, args.hours, args.limit, args.config))
+        return asyncio.run(run_classify_only(project_dir, args.limit, args.config))
 
     if args.select_only:
-        return asyncio.run(run_select_only(project_dir, args.hours, args.limit, args.config))
+        return asyncio.run(run_select_only(project_dir, args.limit, args.config))
 
     # 默认:完整 pipeline
-    return asyncio.run(run_pipeline(project_dir, args.hours, args.no_publish, args.limit, args.config))
+    return asyncio.run(run_pipeline(project_dir, args.no_publish, args.limit, args.config))
 
 
 if __name__ == "__main__":

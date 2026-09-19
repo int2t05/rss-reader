@@ -36,10 +36,12 @@ class RSSSource:
         """源归入的分类路径(如 "ai-research/ai-vendor")。"""
         return self.config.category
 
-    async def fetch(self, since: datetime) -> list[ContentItem]:
-        """抓取 since 之后的新条目,返回全部(不截断)。单源失败返回空列表。
+    async def fetch(self) -> list[ContentItem]:
+        """抓取 feed 当前全部条目,返回全部(不按时间过滤,不截断)。
 
-        不截断:DedupStore 跨轮去重,已处理项不再进 Tier1,每条目恰好处理一次。
+        RSS feed 本身即消息队列:时效性过滤与已处理判定都不在 Source 层做——
+        DedupStore 过滤已处理项(断点续传),每源每日处理上限由编排层控制。
+        单源失败返回空列表,不抛异常。
         """
         items: list[ContentItem] = []
         try:
@@ -50,7 +52,7 @@ class RSSSource:
             feed = feedparser.parse(response.text)
             for entry in feed.entries:
                 published_at = self._parse_date(entry)
-                if not published_at or published_at < since:
+                if not published_at:
                     continue
 
                 item = ContentItem(

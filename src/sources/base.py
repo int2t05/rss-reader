@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Protocol, runtime_checkable
 
 from src.models import ContentItem
@@ -12,12 +11,13 @@ from src.models import ContentItem
 class Source(Protocol):
     """信息源协议:只读产出 ContentItem 列表,无状态,无写回。
 
+    RSS feed 本身即消息队列:fetch 返回 feed 当前全部条目(不按时间过滤),
+    已处理与否由 DedupStore 判定(断点续传),未处理条目下次运行继续消费。
     扩展点:未来非 RSS 源(如 B站未公开 API)可实现此 Protocol。
-    当前所有源走 RSS,RSSSource 是此 Protocol 的唯一实现。
     """
 
     category: str
 
-    async def fetch(self, since: datetime) -> list[ContentItem]:
-        """拉取 since 之后的新条目。单源失败应返回空列表,不抛异常。"""
+    async def fetch(self) -> list[ContentItem]:
+        """拉取 feed 当前全部条目。单源失败应返回空列表,不抛异常。"""
         ...

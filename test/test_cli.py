@@ -60,10 +60,9 @@ def project_dir(tmp_path: Path) -> Path:
 
 
 def test_build_parser_defaults():
-    """argparse 默认:--hours 24,--log-level WARNING。"""
+    """argparse 默认:--log-level WARNING。"""
     parser = build_parser()
     args = parser.parse_args([])
-    assert args.hours == 24
     assert args.log_level == "WARNING"
     assert args.check_config is False
     assert args.fetch_only is False
@@ -72,10 +71,9 @@ def test_build_parser_defaults():
 
 
 def test_build_parser_custom_args():
-    """argparse 解析自定义参数:--hours 48 --log-level DEBUG --fetch-only。"""
+    """argparse 解析自定义参数:--log-level DEBUG --fetch-only --project-dir。"""
     parser = build_parser()
-    args = parser.parse_args(["--hours", "48", "--log-level", "DEBUG", "--fetch-only", "--project-dir", "/tmp/project"])
-    assert args.hours == 48
+    args = parser.parse_args(["--log-level", "DEBUG", "--fetch-only", "--project-dir", "/tmp/project"])
     assert args.log_level == "DEBUG"
     assert args.fetch_only is True
     assert args.project_dir == "/tmp/project"
@@ -124,16 +122,15 @@ def test_main_classify_only_dispatches(monkeypatch: pytest.MonkeyPatch, tmp_path
 
     called: dict = {}
 
-    async def fake_run(project_dir, hours, limit, config_path=None):
-        called["args"] = (project_dir, hours, limit)
+    async def fake_run(project_dir, limit, config_path=None):
+        called["args"] = (project_dir, limit)
         return 0
 
     monkeypatch.setattr(main_mod, "run_classify_only", fake_run)
     monkeypatch.setattr(main_mod, "load_dotenv", lambda **kw: None)
-    exit_code = main_mod.main(["--classify-only", "--hours", "12", "--limit", "5"])
+    exit_code = main_mod.main(["--classify-only", "--limit", "5"])
     assert exit_code == 0
-    assert called["args"][1] == 12
-    assert called["args"][2] == 5
+    assert called["args"][1] == 5
 
 
 def test_main_select_only_dispatches(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
@@ -142,15 +139,14 @@ def test_main_select_only_dispatches(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     called: dict = {}
 
-    async def fake_run(project_dir, hours, limit, config_path=None):
-        called["args"] = (project_dir, hours, limit)
+    async def fake_run(project_dir, limit, config_path=None):
+        called["args"] = (project_dir, limit)
         return 0
 
     monkeypatch.setattr(main_mod, "run_select_only", fake_run)
     monkeypatch.setattr(main_mod, "load_dotenv", lambda **kw: None)
-    exit_code = main_mod.main(["--select-only", "--hours", "24"])
+    exit_code = main_mod.main(["--select-only"])
     assert exit_code == 0
-    assert called["args"][1] == 24
 
 
 def test_main_analyze_one_dispatches(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
@@ -159,15 +155,15 @@ def test_main_analyze_one_dispatches(monkeypatch: pytest.MonkeyPatch, tmp_path: 
 
     called: dict = {}
 
-    async def fake_run(project_dir, hours, no_publish, limit, config_path=None):
-        called["args"] = (project_dir, hours, no_publish, limit)
+    async def fake_run(project_dir, no_publish, limit, config_path=None):
+        called["args"] = (project_dir, no_publish, limit)
         return 0
 
     monkeypatch.setattr(main_mod, "run_pipeline", fake_run)
     monkeypatch.setattr(main_mod, "load_dotenv", lambda **kw: None)
-    exit_code = main_mod.main(["--hours", "24"])
+    exit_code = main_mod.main([])
     assert exit_code == 0
-    assert called["args"][2] is False  # 默认发布
+    assert called["args"][1] is False  # 默认发布
 
 
 def test_main_default_dispatches_to_pipeline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
@@ -176,16 +172,15 @@ def test_main_default_dispatches_to_pipeline(monkeypatch: pytest.MonkeyPatch, tm
 
     called: dict = {}
 
-    async def fake_run(project_dir, hours, no_publish, limit, config_path=None):
-        called["args"] = (project_dir, hours, no_publish, limit)
+    async def fake_run(project_dir, no_publish, limit, config_path=None):
+        called["args"] = (project_dir, no_publish, limit)
         return 0
 
     monkeypatch.setattr(main_mod, "run_pipeline", fake_run)
     monkeypatch.setattr(main_mod, "load_dotenv", lambda **kw: None)
-    exit_code = main_mod.main(["--hours", "12", "--no-publish"])
+    exit_code = main_mod.main(["--no-publish"])
     assert exit_code == 0
-    assert called["args"][1] == 12
-    assert called["args"][2] is True  # --no-publish
+    assert called["args"][1] is True  # --no-publish
 
 
 def test_main_default_no_publish_false(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
@@ -194,15 +189,15 @@ def test_main_default_no_publish_false(monkeypatch: pytest.MonkeyPatch, tmp_path
 
     called: dict = {}
 
-    async def fake_run(project_dir, hours, no_publish, limit, config_path=None):
-        called["args"] = (project_dir, hours, no_publish, limit)
+    async def fake_run(project_dir, no_publish, limit, config_path=None):
+        called["args"] = (project_dir, no_publish, limit)
         return 0
 
     monkeypatch.setattr(main_mod, "run_pipeline", fake_run)
     monkeypatch.setattr(main_mod, "load_dotenv", lambda **kw: None)
-    exit_code = main_mod.main(["--hours", "24"])
+    exit_code = main_mod.main([])
     assert exit_code == 0
-    assert called["args"][2] is False  # 默认发布
+    assert called["args"][1] is False  # 默认发布
 
 
 @pytest.mark.network
@@ -251,7 +246,7 @@ async def test_run_fetch_only_real_hn(tmp_path: Path, capsys: pytest.CaptureFixt
         "  category: dev-community/forums\n",
         encoding="utf-8",
     )
-    exit_code = await run_fetch_only(tmp_path, hours=24)
+    exit_code = await run_fetch_only(tmp_path)
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "Hacker News" in captured.out

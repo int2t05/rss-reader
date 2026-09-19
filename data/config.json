@@ -13,49 +13,76 @@
       "display_name": "AI 研究",
       "threshold": 7.0,
       "digest_limit": 8,
-      "children": ["ai-vendor", "ai-researcher", "ai-papers"]
+      "children": [
+        "ai-vendor",
+        "ai-researcher",
+        "ai-papers"
+      ]
     },
     "research": {
       "enabled": true,
       "display_name": "论文科研",
       "threshold": 7.0,
       "digest_limit": 5,
-      "children": ["arxiv-cs", "arxiv-stat", "arxiv-other", "papers-other"]
+      "children": [
+        "arxiv-cs",
+        "arxiv-stat",
+        "arxiv-other",
+        "papers-other"
+      ]
     },
     "systems": {
       "enabled": true,
       "display_name": "系统工程",
       "threshold": 5.0,
       "digest_limit": 5,
-      "children": ["eng-blog", "framework", "cn-tech"]
+      "children": [
+        "eng-blog",
+        "framework",
+        "cn-tech"
+      ]
     },
     "dev-community": {
       "enabled": true,
       "display_name": "开发者社区",
       "threshold": 5.0,
       "digest_limit": 5,
-      "children": ["github-trending", "github-topics", "forums", "reddit"]
+      "children": [
+        "github-trending",
+        "github-topics",
+        "forums",
+        "reddit"
+      ]
     },
     "tech-news": {
       "enabled": true,
       "display_name": "科技资讯",
       "threshold": 4.0,
       "digest_limit": 5,
-      "children": ["cn-news", "en-news"]
+      "children": [
+        "cn-news",
+        "en-news"
+      ]
     },
     "self-built": {
       "enabled": true,
       "display_name": "自建源",
       "threshold": 4.0,
       "digest_limit": 3,
-      "children": ["auto-trend"]
+      "children": [
+        "auto-trend"
+      ]
     },
     "video": {
       "enabled": true,
       "display_name": "视频",
       "threshold": 4.0,
-      "digest_limit": 3,
-      "children": ["bilibili", "youtube", "fluxsift"]
+      "digest_limit": 8,
+      "children": [
+        "bilibili",
+        "youtube",
+        "fluxsift"
+      ]
     },
     "finance": {
       "enabled": false,
@@ -74,7 +101,9 @@
   },
   "outputs": {
     "github_pages": true,
-    "email": {"enabled": false},
+    "email": {
+      "enabled": false
+    },
     "webhook": []
   }
 }

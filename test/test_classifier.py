@@ -162,9 +162,7 @@ async def test_classify_real_rss_item(registry: CategoryRegistry):
     # dev-community 未在 registry 中,但分类器应仍能工作(用默认分类树)
     async with httpx.AsyncClient(timeout=30.0) as http:
         src = RSSSource(rss_cfg, http)
-        from datetime import timedelta
-        since = datetime.now(timezone.utc) - timedelta(days=1)
-        items = await src.fetch(since)
+        items = await src.fetch()
         if not items:
             pytest.skip("HN returned no items — skipping (not mocked)")
         item = items[0]

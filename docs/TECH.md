@@ -65,11 +65,11 @@ flowchart TB
 ```python
 class Source(Protocol):
     category: str
-    async def fetch(self, since: datetime) -> list[ContentItem]: ...
+    async def fetch(self) -> list[ContentItem]: ...  # feed 全量(队列)
 
 class RSSSource:
     def __init__(self, config: RSSSourceConfig, http_client: httpx.AsyncClient): ...
-    async def fetch(self, since: datetime) -> list[ContentItem]: ...  # 全量,不截断
+    async def fetch(self) -> list[ContentItem]: ...  # feed 全量,无时间窗过滤
 
 def build_source(config, rsshub_base_url, http_client) -> RSSSource | None
 ```
@@ -166,8 +166,8 @@ sequenceDiagram
     participant R as Render
     participant P as Publish
 
-    M->>S: fetch(since=now-24h)
-    S-->>M: list[ContentItem] ~500-1000
+    M->>S: fetch()(feed 全量,无时间窗)
+    S-->>M: 每源未处理前 30 条,合并
     M->>D: batch_unprocessed(item_ids)
     D-->>M: 过滤已处理
     M->>T1: classify_batch(items)
@@ -197,4 +197,4 @@ sequenceDiagram
 - API key:存 `.env`,`api_key_env` 仅存环境变量名
 - `trust_env=False`:所有 httpx 客户端禁用系统代理(CI 友好)
 - 速率:`analysis_concurrency=10` Semaphore;`tenacity` 对 429/5xx/超时指数退避(3 次)
-- 跨轮去重:`DedupStore` 过滤已处理 `item_id`,每条目恰好 Tier1 一次(冷启动处理历史,稳态仅处理新增),无丢弃
+- 队列消费:`DedupStore` 为消费位点,每源每日消费上限 30 条(`_MAX_PER_SOURCE_PER_RUN`),超限条目下次运行继续(断点续传),无丢弃

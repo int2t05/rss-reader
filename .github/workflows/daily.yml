@@ -1,17 +1,12 @@
 name: Daily Briefing
 
-# 每日 UTC 00:17 跑完整 pipeline,产出中文简报并提交到 docs/_posts/。
-# 推送后自动触发 pages-deploy.yml 构建 Chirpy 并部署到 GitHub Pages。
-# 亦可手动触发(支持传入指定日期)。
+# 每日 UTC 00:17 消费 RSS 消息队列,产出中文简报并提交到 docs/_posts/。
+# 推送后由 pages-deploy.yml 的 workflow_run 监听重建 Chirpy 站点。
+# 亦可手动触发。
 on:
   schedule:
     - cron: "17 0 * * *"  # UTC 00:17 每日
   workflow_dispatch:
-    inputs:
-      hours:
-        description: "Fetch window in hours (default 24)"
-        required: false
-        default: "24"
 
 # 单一并发,避免并发跑覆盖 Pages 提交
 concurrency:
@@ -49,7 +44,7 @@ jobs:
           RSSHUB_BASE_URL: ${{ secrets.RSSHUB_BASE_URL }}
           FLUXSIFT_FEED_URL: ${{ secrets.FLUXSIFT_FEED_URL }}
         run: |
-          uv run rss-reader --hours ${{ github.event.inputs.hours || '24' }} --log-level INFO
+          uv run rss-reader --log-level INFO
 
       - name: Commit and push briefing
         run: |
