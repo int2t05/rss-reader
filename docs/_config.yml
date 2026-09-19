@@ -34,6 +34,12 @@ kramdown:
 paginate: 10
 paginate_path: "/page:num/"
 
+# Chirpy tabs collection(导航入口:_tabs/*.md 生成 /tabs/{name}/)
+collections:
+  tabs:
+    output: true
+    sort_by: order
+
 # Chirpy 用 jekyll-archives 自动生成分类/标签/归档页(gem 自带 jekyll-feed)
 jekyll-archives:
   enabled: [categories, tags]
