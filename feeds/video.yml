@@ -1,32 +1,33 @@
-# 视频:YouTube 直链 + B 站(RSSHub 路由)+ FluxSift 自建视频分析
-# B 站与 FluxSift 需配置 RSSHUB_BASE_URL / FLUXSIFT_* 环境变量,未配置时静默跳过
+# 视频:YouTube + B 站(均经 RSSHub 路由)+ FluxSift 自建视频分析
+# YouTube/B 站均需配置 RSSHUB_BASE_URL(自建或公共实例),未配置时静默跳过
+# YouTube 直连 feeds/videos.xml 在 GitHub Actions IP 被反爬返回 404,经 RSSHub 代理稳定
 
-# YouTube 直链(立即可用)
+# YouTube(RSSHub 路由 /youtube/user/CHANNEL_ID)
 - name: Two Minute Papers
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCbfYPyITQ-7lupoX8nvctg
+  url: /youtube/user/UCbfYPyITQ-7l4upoX8nvctg
   category: video/youtube
 
 - name: 3Blue1Brown
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCYO_jab_esuFRV4b17AJtAw
+  url: /youtube/user/UCYO_jab_esuFRV4b17AJtAw
   category: video/youtube
 
 - name: Fireship
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCsBjURrPoezykLs9EqgamOA
+  url: /youtube/user/UCsBjURrPoezykLs9EqgamOA
   category: video/youtube
 
 - name: ThePrimeagen
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UC8ENHE5xdFSwx71u3fDH5Xw
+  url: /youtube/user/UC8ENHE5xdFSwx71u3fDH5Xw
   category: video/youtube
 
 - name: Yannic Kilcher
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UCZHmQk67mSJgfCCTn7xBfew
+  url: /youtube/user/UCZHmQk67mSJgfCCTn7xBfew
   category: video/youtube
 
 - name: Computerphile
-  url: https://www.youtube.com/feeds/videos.xml?channel_id=UC9-y-6csu5WGm29I7JiwpnA
+  url: /youtube/user/UC9-y-6csu5WGm29I7JiwpnA
   category: video/youtube
 
-# B 站 UP 主(RSSHub 路由,需配置 RSSHUB_BASE_URL)
+# B 站 UP 主(RSSHub 路由 /bilibili/user/video/UID)
 - name: Pi
   url: /bilibili/user/video/316183842
   category: video/bilibili

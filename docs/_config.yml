@@ -12,6 +12,12 @@ baseurl: "/rss-reader"
 lang: zh-CN
 timezone: Asia/Shanghai
 
+# 头像(GitHub avatar,消除左侧空白头像)
+avatar: "https://avatars.githubusercontent.com/u/58378325?v=4"
+
+# 文章页右侧 TOC(大纲)
+toc: true
+
 # Chirpy 主题(gem 形式,需 Actions 构建)
 theme: jekyll-theme-chirpy
 
