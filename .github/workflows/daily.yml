@@ -50,10 +50,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/_posts/ data/summaries/ || true
+          git add docs/_posts/ || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
             git commit -m "docs(daily): $(date -u +%Y-%m-%d) briefing"
+            # 运行期间可能有新 push,rebase 后再推,避免 fast-forward 拒绝
+            git pull --rebase origin main
             git push
           fi
