@@ -1,7 +1,8 @@
 name: "Build and Deploy Pages"
 
 # Chirpy 主题不在 GitHub Pages 白名单,需 Actions 构建。
-# Python pipeline(daily.yml)推送 _posts/*.md 后触发本 workflow 构建 Jekyll 并部署。
+# 触发:① docs/** 变更 push;② Daily Briefing workflow 完成后(GITHUB_TOKEN 的
+# push 不触发其他 workflow,需 workflow_run 显式监听,否则日报不重建站点)。
 on:
   push:
     branches: [main]
@@ -9,6 +10,9 @@ on:
       - "docs/**"
       - ".github/workflows/pages-deploy.yml"
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Daily Briefing"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -25,6 +29,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: main  # workflow_run 触发时取最新 main(含 daily 刚提交的日报)
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
