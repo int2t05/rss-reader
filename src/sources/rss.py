@@ -24,6 +24,9 @@ logger = logging.getLogger(__name__)
 class RSSSource:
     """RSS/Atom 源:配置驱动,用 feedparser 解析,支持 ${VAR} 环境变量展开。"""
 
+    # 浏览器 UA:部分源(YouTube/Reddit)拒绝默认 httpx UA,返回 404/403
+    _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; rss-reader/1.0; +https://github.com/int2t05/rss-reader)"}
+
     def __init__(self, config: RSSSourceConfig, http_client: httpx.AsyncClient):
         self.config = config
         self.client = http_client
@@ -41,7 +44,7 @@ class RSSSource:
         items: list[ContentItem] = []
         try:
             feed_url = expand_env(self.config.url)
-            response = await self.client.get(feed_url, follow_redirects=True)
+            response = await self.client.get(feed_url, follow_redirects=True, headers=self._HEADERS)
             response.raise_for_status()
 
             feed = feedparser.parse(response.text)
