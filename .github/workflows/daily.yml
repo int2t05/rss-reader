@@ -47,6 +47,7 @@ jobs:
           OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           RSSHUB_BASE_URL: ${{ secrets.RSSHUB_BASE_URL }}
+          FLUXSIFT_FEED_URL: ${{ secrets.FLUXSIFT_FEED_URL }}
         run: |
           uv run rss-reader --hours ${{ github.event.inputs.hours || '24' }} --log-level INFO
 

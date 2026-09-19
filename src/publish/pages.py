@@ -60,6 +60,7 @@ class GitHubPagesPublisher:
             f"date: {date_chirpy}\n"
             "categories: [简报]\n"
             f"tags: [{tags_yaml}]\n"
+            "toc: true\n"
             "---\n\n"
         )
         return front_matter + content

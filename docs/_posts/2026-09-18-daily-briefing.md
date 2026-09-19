@@ -3,6 +3,7 @@ layout: post
 title: "每日简报 · 2026-09-18"
 date: 2026-09-18 09:00:00 +0800
 categories: [简报]
+toc: true
 tags: [ai-research, research, systems, dev-community, tech-news, self-built, video]
 ---
 

@@ -136,8 +136,8 @@
   url: /bilibili/user/video/12370885
   category: video/bilibili
 
-# FluxSift 自建视频分析(B 站/抖音收藏夹),经 cpolar 隧道转发
+# FluxSift 自建视频分析(B 站/抖音收藏夹),经 cpolar 公网隧道转发内网 FluxSift serve
+# URL 与 token 通过 ${FLUXSIFT_FEED_URL} 环境变量注入(GitHub Secret),避免密钥入库
 - name: FluxSift
-  url: ${FLUXSIFT_FEED_URL}/${FLUXSIFT_TOKEN}.xml
+  url: ${FLUXSIFT_FEED_URL}
   category: video/fluxsift
-  enabled: false  # 部署 FluxSift 后改为 true,配置 .env 中的 FLUXSIFT_FEED_URL 和 FLUXSIFT_TOKEN

@@ -151,8 +151,7 @@ class CategoryConfig:
 | `OPENAI_BASE_URL` | 否 | 非 OpenAI provider 端点(火山方舟等) |
 | `OPENAI_MODEL` | 否 | 覆盖 config 中的 model |
 | `RSSHUB_BASE_URL` | 否 | RSSHub 实例 URL |
-| `FLUXSIFT_FEED_URL` | 否 | FluxSift RSS 地址 |
-| `FLUXSIFT_TOKEN` | 否 | FluxSift feed token |
+| `FLUXSIFT_FEED_URL` | 否 | FluxSift 自建视频源 RSS 地址(含 token,经 cpolar 隧道) |
 
 ## Webhook 类型
 
