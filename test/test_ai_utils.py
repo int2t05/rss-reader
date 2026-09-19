@@ -2,7 +2,6 @@
 
 纯逻辑测试,无网络无 LLM,用真实 LLM 响应样本验证。
 """
-import pytest
 
 from src.ai.utils import parse_json_array_response, parse_json_response
 

@@ -1,4 +1,4 @@
-"""Markdown 简报渲染:按分类组织,每条目含 Tier1 + Tier3 字段。
+"""Markdown 简报渲染:按分类组织,每条目含 Tier1 字段(title/score/summary/tags)。
 
 渲染顺序:日期标题 → 统计 → 按分类分节 → 每分类下条目列表。
 """

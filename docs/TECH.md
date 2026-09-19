@@ -2,9 +2,9 @@
 
 ## 技术栈
 
-Python 3.12+ · uv · httpx(trust_env=False)· feedparser · pydantic v2 · openai SDK · ddgs · trafilatura · rich · PyYAML · python-dotenv · sqlite3
+Python 3.12+ · uv · httpx(trust_env=False)· feedparser · pydantic v2 · openai SDK · tenacity · rich · PyYAML · python-dotenv · sqlite3
 
-可选:exa-py(语义搜索)· firecrawl-py(JS 渲染抓取)
+前端:Jekyll + Chirpy 主题(GitHub Actions 构建)
 
 ## 系统架构
 
@@ -198,7 +198,7 @@ sequenceDiagram
     participant P as Publish
 
     M->>S: fetch(since=now-24h)
-    S-->>M: list[ContentItem] ~500-1000(每源截断 30)
+    S-->>M: list[ContentItem] ~500-1000(DedupStore 过滤已处理)
     M->>T1: classify_batch(items)
     T1-->>M: items 带 analysis(分类+分数+摘要)
     M->>T2: select(items, use_llm_dedup=True)
@@ -248,4 +248,4 @@ sequenceDiagram
 - API key:存 `.env`,`api_key_env` 仅存环境变量名
 - `trust_env=False`:所有 httpx 客户端禁用系统代理(CI 友好;本地需代理的国际源会抓取失败,日志 WARNING)
 - 速率:`analysis_concurrency=10` Semaphore;`tenacity` 对 429/5xx/超时指数退避(3 次)
-- 每源截断 30 条:控制高产出源(arXiv 子类)的 Tier1 调用量与时延
+- 跨轮去重:`DedupStore` 过滤已处理 `item_id`,每条目恰好 Tier1 一次(冷启动处理历史,稳态仅处理新增),无丢弃无重处理

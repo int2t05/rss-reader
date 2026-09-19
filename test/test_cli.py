@@ -3,7 +3,6 @@
 非 mock:真实加载 tmp_path 下的配置目录,真实抓取 HN 验证 --fetch-only。
 """
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest

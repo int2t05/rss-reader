@@ -1,19 +1,22 @@
-# Jekyll 配置:rss-reader GitHub Pages 站点
-# 站点根为 docs/,每日简报输出到 docs/_posts/YYYY-MM-DD-{zh,en}.md
+# Jekyll 配置:rss-reader GitHub Pages 站点(Chirpy 主题)
+# 站点根为 docs/,每日简报输出到 docs/_posts/YYYY-MM-DD.md
+# Chirpy 需 GitHub Actions 构建(不在 Pages 白名单),见 .github/workflows/pages-deploy.yml
 
-title: rss-reader Daily Briefing
+title: rss-reader
 description: >-
-  个人信息聚合 + AI 总结系统每日简报。抓取 RSS 源(含自建源 FluxSift + auto-trend),
-  经三段式 pipeline(分类打分 → 选取去重 → agent 深度分析)产出中英双语简报。
-url: ""
-baseurl: ""
+  个人信息聚合 + AI 总结系统每日简报。抓取 RSS 源(含自建源 auto-trend、视频源),
+  经两段式 pipeline(分类+打分+摘要 / 选取+去重)产出中文每日简报。
+tagline: 每日 RSS 摘要日报
+url: "https://int2t05.github.io"
+baseurl: "/rss-reader"
 lang: zh-CN
+timezone: Asia/Shanghai
 
-# 使用 jekyll 默认 minima 主题(GitHub Pages 原生支持)
-theme: minima
+# Chirpy 主题(gem 形式,需 Actions 构建)
+theme: jekyll-theme-chirpy
 
 # 文章 permalink:按日期 + slug
-permalink: /:categories/:year/:month/:day/:title/
+permalink: /posts/:year/:month/:day/:title/
 
 # Markdown 渲染
 markdown: kramdown
@@ -21,13 +24,19 @@ kramdown:
   input: GFM
   syntax_highlighter: rouge
 
-# 分页(每页 10 篇)
-plugins:
-  - jekyll-paginate
-  - jekyll-feed
-
+# 分页
 paginate: 10
 paginate_path: "/page:num/"
+
+# Chirpy 用 jekyll-archives 自动生成分类/标签/归档页(gem 自带 jekyll-feed)
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag: tag
+  permalinks:
+    tag: /tags/:name/
+    category: /categories/:name/
 
 # 默认 front matter:每篇 post 的 layout 默认为 post
 defaults:
@@ -38,10 +47,15 @@ defaults:
       layout: post
       author: rss-reader
 
-# 排除非简报文件(架构文档等)不作为 posts
+# 排除非站点文件(架构文档等)不参与构建
 exclude:
-  - architecture/
-  - research/
-  - PLAN.md
+  - API/
+  - FLOW/
   - PRD.md
   - TECH.md
+  - TODO.md
+  - audit/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor

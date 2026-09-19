@@ -7,7 +7,6 @@ from pathlib import Path
 
 import pytest
 
-from src.models import CategoryConfig
 from src.processing.categories import CategoryRegistry
 
 

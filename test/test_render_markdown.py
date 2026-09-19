@@ -4,8 +4,6 @@
 """
 from datetime import datetime, timezone
 
-import pytest
-
 from src.models import (
     ContentAnalysis,
     ContentItem,

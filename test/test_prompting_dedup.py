@@ -1,5 +1,4 @@
 """Tier2 主题去重 prompt 构建测试:纯逻辑验证。"""
-import pytest
 
 from src.ai.prompting.deduplication import topic_dedup_system_prompt, topic_dedup_user_prompt
 

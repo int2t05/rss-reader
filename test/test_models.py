@@ -1,8 +1,6 @@
 """模型层测试:ContentItem / RSSSourceConfig / CategoryConfig / ContentAnalysis。"""
 from datetime import datetime, timezone
 
-import pytest
-
 from src.models import (
     CategoryConfig,
     ContentAnalysis,

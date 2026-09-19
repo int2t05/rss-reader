@@ -92,19 +92,3 @@ async def test_client_complete_real_call_classifies_item():
     assert parsed is not None, f"LLM 响应无法解析为 JSON: {response[:200]}"
     assert "category" in parsed
     assert "score" in parsed
-
-
-@pytest.mark.llm
-async def test_client_complete_with_messages_multiturn():
-    """真实 LLM 调用:messages 多轮对话模式,assistant 历史被保留并可见。"""
-    cfg = _get_test_config()
-    client = AIClient(cfg)
-    messages = [
-        {"role": "system", "content": "你是助手。用户会问你之前说了什么。"},
-        {"role": "user", "content": "我说了一个秘密词:pineapple。"},
-        {"role": "assistant", "content": "好的,我记住了。"},
-        {"role": "user", "content": "我刚才说的秘密词是什么?只回答这个词。"},
-    ]
-    response = await client.complete(messages=messages, temperature=0)
-    assert isinstance(response, str)
-    assert "pineapple" in response.lower()

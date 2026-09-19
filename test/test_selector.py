@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from src.ai.classifier import ContentClassifier
 from src.ai.client import AIClient, AIClientConfig
 from src.ai.selector import ContentSelector
 from src.models import ContentAnalysis, ContentItem, ItemProcessing, SourceType

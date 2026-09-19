@@ -1,8 +1,5 @@
 """跨源 URL 去重 + 分类分组测试:纯逻辑,无网络无 LLM。"""
 from datetime import datetime, timezone
-from pathlib import Path
-
-import pytest
 
 from src.models import ContentAnalysis, ContentItem, ItemProcessing, SourceType
 from src.processing.dedup import dedup_by_url, group_by_category

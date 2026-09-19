@@ -2,7 +2,6 @@
 
 分类树配置在 data/config.json 的 categories 段 + categories/<cat>/category.json。
 Tier1/Tier2 的 prompt 在 src/ai/prompting/ 下(Python 生成,非 .md 文件)。
-TODO: load_from_raw 与 config.py _load_category_configs 逻辑重复,同一份配置解析两次。
 """
 
 from __future__ import annotations
@@ -11,6 +10,27 @@ import json
 from pathlib import Path
 
 from src.models import CategoryConfig
+
+
+def parse_category_config(categories_root: Path, name: str, raw: dict) -> CategoryConfig | None:
+    """解析单个分类:合并 categories/<name>/category.json 覆盖 raw,enabled=False 返回 None。
+
+    config.py 与 CategoryRegistry 共享此逻辑,避免同一份配置解析两次。
+    """
+    if not raw.get("enabled", False):
+        return None
+    cat_file = categories_root / name / "category.json"
+    merged = dict(raw)
+    if cat_file.exists():
+        merged.update(json.loads(cat_file.read_text(encoding="utf-8")))
+    return CategoryConfig(
+        name=name,
+        enabled=merged.get("enabled", False),
+        display_name=merged.get("display_name", name),
+        threshold=merged.get("threshold", 5.0),
+        digest_limit=merged.get("digest_limit", 5),
+        children=merged.get("children", []),
+    )
 
 
 class CategoryRegistry:
@@ -25,21 +45,9 @@ class CategoryRegistry:
         """从 config.json 的 categories 段加载,过滤 enabled=False。"""
         self._categories.clear()
         for name, raw in raw_categories.items():
-            if not raw.get("enabled", False):
-                continue
-            # categories/<name>/category.json 覆盖 raw(若存在)
-            cat_file = self._root / name / "category.json"
-            merged = dict(raw)
-            if cat_file.exists():
-                merged.update(json.loads(cat_file.read_text(encoding="utf-8")))
-            self._categories[name] = CategoryConfig(
-                name=name,
-                enabled=merged.get("enabled", False),
-                display_name=merged.get("display_name", name),
-                threshold=merged.get("threshold", 5.0),
-                digest_limit=merged.get("digest_limit", 5),
-                children=merged.get("children", []),
-            )
+            cfg = parse_category_config(self._root, name, raw)
+            if cfg is not None:
+                self._categories[name] = cfg
 
     def all(self) -> list[CategoryConfig]:
         """返回所有已加载(enabled)分类。"""

@@ -1,11 +1,10 @@
 """配置加载测试:JSON + YAML + ${VAR} 环境变量展开。"""
 import json
-import os
 from pathlib import Path
 
 import pytest
 
-from src.config import Config, load_config
+from src.config import load_config
 
 
 @pytest.fixture

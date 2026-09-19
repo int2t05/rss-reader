@@ -73,27 +73,21 @@ class AIClient:
 
     async def complete(
         self,
-        system: str | None = None,
-        user: str | None = None,
+        system: str,
+        user: str,
         *,
-        messages: list[dict] | None = None,
         temperature: float = 0.7,
         max_tokens: int | None = None,
     ) -> str:
-        """调用 LLM,返回文本响应。
-
-        两种调用方式:
-        - 单轮:传 system + user(Tier1/Tier2 分类、主题去重)
-        - 多轮:传 messages 列表(Tier3 ReAct,含 system/user/assistant/tool_result 真实角色)
+        """调用 LLM,返回文本响应(system + user 单轮)。
 
         temperature: 0.7 默认(创造性),0 用于 JSON 修复重试。
         max_tokens: None 时由模型自行决定。
         """
-        if messages is None:
-            messages = [
-                {"role": "system", "content": system or ""},
-                {"role": "user", "content": user or ""},
-            ]
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ]
 
         # 网络重试:连接/限流/5xx 指数退避(最多 3 次),4xx 认证/参数错误不重试
         async for attempt in AsyncRetrying(

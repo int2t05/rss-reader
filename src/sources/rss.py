@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 class RSSSource:
     """RSS/Atom 源:配置驱动,用 feedparser 解析,支持 ${VAR} 环境变量展开。"""
 
-    # 每源条目上限:截断高产出源(如 arXiv 子类每日数百篇),控制 Tier1 成本与时延
-    _MAX_ITEMS_PER_SOURCE = 30
-
     def __init__(self, config: RSSSourceConfig, http_client: httpx.AsyncClient):
         self.config = config
         self.client = http_client
@@ -37,7 +34,10 @@ class RSSSource:
         return self.config.category
 
     async def fetch(self, since: datetime) -> list[ContentItem]:
-        """抓取 since 之后的新条目,每源截断至最近 _MAX_ITEMS_PER_SOURCE 条。单源失败返回空列表。"""
+        """抓取 since 之后的新条目,返回全部(不截断)。单源失败返回空列表。
+
+        不截断:DedupStore 跨轮去重,已处理项不再进 Tier1,每条目恰好处理一次。
+        """
         items: list[ContentItem] = []
         try:
             feed_url = expand_env(self.config.url)
@@ -70,8 +70,7 @@ class RSSSource:
             logger.warning("HTTP error fetching RSS %s: %s", self.config.name, e)
         except Exception as e:
             logger.warning("Error parsing RSS %s: %s", self.config.name, e)
-        # 截断高产出源(arXiv 子类等),保留最近 N 条(entries 通常已按时间倒序)
-        return items[: self._MAX_ITEMS_PER_SOURCE]
+        return items
 
     def _parse_date(self, entry: dict) -> datetime | None:
         """解析发布日期,优先 struct_time,回退 RFC2822,无时区补 UTC。

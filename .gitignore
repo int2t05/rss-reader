@@ -41,6 +41,8 @@ htmlcov/
 data/summaries/
 data/dedup.db
 data/dedup.db-journal
+data/dedup.db-wal
+data/dedup.db-shm
 
 # Docs audit (per global convention)
 docs/audit/

@@ -12,6 +12,13 @@ from src.models import ContentItem
 from src.utils.url import normalize_url
 
 
+def _item_score(item: ContentItem) -> float:
+    """提取 item 的 Tier1 分数,无 analysis 返回 0.0。"""
+    if item.processing and item.processing.analysis:
+        return item.processing.analysis.score
+    return 0.0
+
+
 def dedup_by_url(items: list[ContentItem]) -> list[ContentItem]:
     """跨源 URL 去重:规范化 URL 后按 URL 合并,同 URL 保留分数最高的。
 
@@ -27,8 +34,8 @@ def dedup_by_url(items: list[ContentItem]) -> list[ContentItem]:
             by_url[norm] = item
             continue
         # 比较 score,保留高分
-        existing_score = existing.processing.analysis.score if existing.processing and existing.processing.analysis else 0.0
-        new_score = item.processing.analysis.score if item.processing and item.processing.analysis else 0.0
+        existing_score = _item_score(existing)
+        new_score = _item_score(item)
         if new_score > existing_score:
             by_url[norm] = item
     return list(by_url.values())

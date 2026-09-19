@@ -1,6 +1,7 @@
 name: Daily Briefing
 
-# 每日 UTC 00:17 跑完整 pipeline,产出中文简报并发布到 GitHub Pages。
+# 每日 UTC 00:17 跑完整 pipeline,产出中文简报并提交到 docs/_posts/。
+# 推送后自动触发 pages-deploy.yml 构建 Chirpy 并部署到 GitHub Pages。
 # 亦可手动触发(支持传入指定日期)。
 on:
   schedule:

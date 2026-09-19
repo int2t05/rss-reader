@@ -4,7 +4,6 @@
 """
 from datetime import datetime, timezone
 
-import httpx
 import pytest
 
 from src.publish.webhook import (

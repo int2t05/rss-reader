@@ -11,7 +11,7 @@
 
 抓取 RSS 源(含自建源 auto-trend、视频源),经两段式 pipeline 产出中文每日简报,发布到 GitHub Pages 与 Webhook。
 
-**特色**:两段式 pipeline(Tier1 分类+打分+摘要 / Tier2 选取+去重)在成本与深度间取得平衡,日 LLM 调用 < 1000 次;每源截断 30 条 + 批量主题去重控制 prompt 与时延;7 大类分类树 + 分类感知阈值保证多样性与重点突出;自建源产出 RSS 即可接入,零适配。
+**特色**:两段式 pipeline(Tier1 分类+打分+摘要 / Tier2 选取+去重)在成本与深度间取得平衡,日 LLM 调用 < 1000 次;DedupStore 跨轮去重(每条目恰好处理一次,无丢弃无重处理)+ 批量主题去重控制 prompt 与时延;7 大类分类树 + 分类感知阈值保证多样性与重点突出;自建源产出 RSS 即可接入,零适配。
 
 ## 快速开始
 
@@ -51,15 +51,15 @@ flowchart LR
 ```
 
 **两段式 pipeline**:
-- **Tier 1**(全量):每源截断 30 条,单次 LLM 分类 + 打分 + 摘要,并发 10
+- **Tier 1**(全量):抓取窗口内全部条目(DedupStore 过滤已处理),单次 LLM 分类 + 打分 + 摘要,并发 10
 - **Tier 2**(零 AI):URL 去重 + 分类感知阈值 + 批量主题去重(分块并发)+ 配额平衡
 
 ## 功能
 
 - 7 大类(ai-research/research/systems/dev-community/tech-news/self-built/video)+ 子类分类树
-- 每源截断 30 条控量,批量主题去重(大组分块并发)控制 prompt 大小
+- DedupStore 跨轮去重(每条目恰好处理一次,无丢弃无重处理),批量主题去重(大组分块并发)控制 prompt 大小
 - 中文每日简报
-- GitHub Pages(Jekyll)+ Webhook(飞书/Slack/Discord/自定义,并发)
+- GitHub Pages(Chirpy 主题,Actions 构建)+ Webhook(飞书/Slack/Discord/自定义,并发)
 - 跨轮去重(SQLite WAL,已处理项跳过)
 - tenacity 网络重试(429/5xx/超时)
 - 自建源 RSS 接入零适配(auto-trend/FluxSift)

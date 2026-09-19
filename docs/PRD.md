@@ -17,7 +17,7 @@
 
 ### 已实现
 
-- RSS 聚合:任意 RSS/Atom,`${VAR}` 环境变量展开,可选 RSSHub 路由,每源截断 30 条控量
+- RSS 聚合:任意 RSS/Atom,`${VAR}` 环境变量展开,可选 RSSHub 路由,抓取窗口内全量(不截断)
 - 分类体系:7 大类(ai-research/research/systems/dev-community/tech-news/self-built/video)+ 子类,分类感知阈值 + 配额平衡
 - Tier 1:单次 LLM 分类 + 打分 + 摘要(合并调用,减半成本),JSON 修复重试,并发 10
 - Tier 2:URL 去重 + 分类阈值过滤 + 主题去重(LLM)+ 配额平衡,零 AI(主题去重除外)

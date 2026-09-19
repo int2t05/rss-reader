@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 from src.models import CategoryConfig, RSSSourceConfig
+from src.processing.categories import parse_category_config
 from src.utils.env import expand_env
 
 logger = logging.getLogger(__name__)
@@ -44,28 +45,13 @@ class Config:
 def _load_category_configs(categories_root: Path, raw_categories: dict) -> list[CategoryConfig]:
     """遍历 categories/<cat>/category.json,合并 raw 覆盖,过滤 enabled=False。
 
-    优先使用 categories/<cat>/category.json(独立文件),回退到 data/config.json 中
-    categories 段的 raw 值,使配置可以只写一处。
+    委托 parse_category_config,与 CategoryRegistry 共享解析逻辑。
     """
     configs: list[CategoryConfig] = []
     for name, raw in raw_categories.items():
-        if not raw.get("enabled", False):
-            continue
-        # 独立 category.json 覆盖 raw(若存在)
-        cat_file = categories_root / name / "category.json"
-        merged = dict(raw)
-        if cat_file.exists():
-            merged.update(json.loads(cat_file.read_text(encoding="utf-8")))
-        configs.append(
-            CategoryConfig(
-                name=name,
-                enabled=merged.get("enabled", False),
-                display_name=merged.get("display_name", name),
-                threshold=merged.get("threshold", 5.0),
-                digest_limit=merged.get("digest_limit", 5),
-                children=merged.get("children", []),
-            )
-        )
+        cfg = parse_category_config(categories_root, name, raw)
+        if cfg is not None:
+            configs.append(cfg)
     return configs
 
 
