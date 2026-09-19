@@ -1,6 +1,6 @@
-"""GitHub Pages 发布:写入 docs/_posts/YYYY-MM-DD.md,带 Chirpy 兼容 front matter。
+"""GitHub Pages 发布:写入 docs/_posts/YYYY-MM-DD-daily-briefing.md,带 Chirpy 兼容 front matter。
 
-文件名格式遵循 Jekyll 约定:YYYY-MM-DD-slug.md,本系统 slug 省略(单语中文产物)。
+文件名格式遵循 Jekyll 约定:YYYY-MM-DD-slug.md(Chirpy 要求带 slug,否则不识别为 post)。
 front matter 含 layout/title/date(带时区)/categories/tags,适配 Chirpy 主题。
 """
 
@@ -9,6 +9,9 @@ from __future__ import annotations
 import re
 from datetime import datetime
 from pathlib import Path
+
+# Jekyll post 文件名 slug(固定,日报无独立标题)
+_POST_SLUG = "daily-briefing"
 
 
 class GitHubPagesPublisher:
@@ -24,14 +27,14 @@ class GitHubPagesPublisher:
         self.posts_dir = Path(posts_dir)
 
     def publish(self, content: str, date: datetime) -> Path:
-        """发布简报到 docs/_posts/YYYY-MM-DD.md,返回文件路径。
+        """发布简报到 docs/_posts/YYYY-MM-DD-daily-briefing.md,返回文件路径。
 
         文件含 Chirpy 兼容 front matter(layout/title/date/categories/tags)。
         title 从内容首行 `#` 标题提取;tags 从正文 `## 分类` 节提取(全小写)。
         """
         self.posts_dir.mkdir(parents=True, exist_ok=True)
         date_str = date.strftime("%Y-%m-%d")
-        path = self.posts_dir / f"{date_str}.md"
+        path = self.posts_dir / f"{date_str}-{_POST_SLUG}.md"
         path.write_text(self._with_front_matter(content, date), encoding="utf-8")
         return path
 
