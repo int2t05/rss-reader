@@ -4,7 +4,6 @@
 .env.*.local
 
 # AI assistant config (私人,不进仓库)
-CLAUDE.md
 
 # Python
 __pycache__/
