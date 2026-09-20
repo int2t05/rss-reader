@@ -1,16 +1,36 @@
-<!-- 头像点击跳转 GitHub 主页:Chirpy sidebar avatar 默认指向首页,JS 覆盖 href -->
+<!-- 头像跳转 GitHub + topbar 右上角注入 GitHub 仓库入口(Chirpy 无官方 topbar 钩子,JS 注入) -->
 <script>
 (function() {
+  var GH_URL = 'https://github.com/int2t05';
+
   function setAvatarLink() {
     var a = document.getElementById('avatar');
-    if (a) { a.href = 'https://github.com/int2t05'; }
+    if (a) { a.href = GH_URL; a.target = '_blank'; a.rel = 'noopener'; }
   }
+
+  function injectGitHubIcon() {
+    if (document.getElementById('gh-topbar-link')) return;
+    var topbar = document.getElementById('topbar');
+    if (!topbar) return;
+    var a = document.createElement('a');
+    a.id = 'gh-topbar-link';
+    a.href = GH_URL;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.className = 'btn btn-link nav-link px-2';
+    a.setAttribute('aria-label', 'GitHub repository');
+    a.innerHTML = '<i class="fab fa-github"></i>';
+    topbar.appendChild(a);
+  }
+
+  function apply() { setAvatarLink(); injectGitHubIcon(); }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setAvatarLink);
+    document.addEventListener('DOMContentLoaded', apply);
   } else {
-    setAvatarLink();
+    apply();
   }
-  // 侧边栏若被主题 JS 重渲染,MutationObserver 兜底再改一次
-  new MutationObserver(setAvatarLink).observe(document.documentElement, { childList: true, subtree: true });
+  // 主题 JS 若重渲染侧栏/topbar,兜底重注入
+  new MutationObserver(apply).observe(document.documentElement, { childList: true, subtree: true });
 })();
 </script>

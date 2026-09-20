@@ -1,0 +1,8 @@
+# 侧边栏底部社交入口(Chirpy 官方机制:遍历此文件渲染 icons)
+
+- type: github
+  icon: "fab fa-github"
+
+- type: rss
+  icon: "fas fa-rss"
+  noblank: true
