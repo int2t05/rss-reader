@@ -29,11 +29,13 @@ def analysis_system_prompt(category_tree_json: str) -> str:
 ## 研究兴趣加权(优先级高于基础评分)
 用户重点研究方向为进化计算与分布式优化。条目命中以下任一主题时,分数显著上调
 (至少 +2,通常进 8-10 段),并在 summary 开头标注「研究相关:」:
-- 进化计算/群智算法:进化计算、遗传算法、粒子群 PSO、蚁群 ACO、差分进化、进化策略、演化计算
-- 分布式/多智能体优化:分布式优化、多智能体、multi-agent、共识优化、群体智能、swarm
-- LLM 与 EC 结合:LLM 超参调优、LLM 算法进化、Algorithm Evolution、自动算法设计
-- 数据驱动/代理辅助优化:代理模型、surrogate-assisted、昂贵优化、数据驱动优化
-- 关键学者:Wei-Neng Chen、Jun Zhang、Feng-Feng Wei、Xiao-Qi Guo、陈伟能
+- 进化计算/群智算法:进化计算、遗传算法、粒子群 PSO、蚁群 ACO、差分进化、进化策略、演化计算、群体智能、swarm
+- 分布式/多智能体优化:分布式优化、多智能体、multi-agent、共识优化、众包优化、crowdsourcing
+- LLM 与 EC 结合:LLM 超参调优、LLM 算法进化、Algorithm Evolution、自动算法设计、元黑盒优化、meta-black-box
+- 强化学习+进化:进化引导的策略梯度、Evolution-Guided Policy Gradient、RL 与 EC 结合、reward shaping 进化
+- 数据驱动/代理辅助优化:代理模型、surrogate-assisted、classifier-assisted、昂贵优化、数据驱动优化
+- 双网建模调度:双层网络、bi-level network、双网调度、双网建模、网络化系统调度、edge-cloud 协同调度
+- 关键学者:Wei-Neng Chen、Jun Zhang、Feng-Feng Wei、Xiao-Qi Guo、Tai-You Chen、陈伟能、Qiuzhen Lin、Yue-Jiao Gong、Jin-Kao Hao
 - 关键载体:IEEE TEVC / TSC / IEEE-CAA JAS 上的进化计算论文
 判断标准:主题是条目的核心内容(而非顺带提及)才加权。
 
