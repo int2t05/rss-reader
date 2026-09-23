@@ -140,7 +140,13 @@ class ContentSelector:
         system_prompt = topic_dedup_system_prompt()
         user_prompt = topic_dedup_user_prompt(category=parent_cat, items_summary=items_summary)
 
-        response = await self.client.complete(system=system_prompt, user=user_prompt, temperature=0)
+        # LLM 调用已由 tenacity 重试 3 次,此处兜底:耗尽重试后保留全部条目,不崩管线
+        try:
+            response = await self.client.complete(system=system_prompt, user=user_prompt, temperature=0)
+        except Exception as e:
+            logger.warning("Topic dedup LLM call failed for %s, keeping all items: %s", parent_cat, e)
+            return [[item] for item in items]
+
         clusters_raw = parse_json_array_response(response)
         if clusters_raw is None:
             logger.warning("Topic dedup parse failed for %s, keeping all items", parent_cat)
