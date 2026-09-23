@@ -20,6 +20,7 @@ import argparse
 import asyncio
 import logging
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -66,6 +67,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--classify-only", action="store_true", help="Run Tier 1 classification only")
     parser.add_argument("--select-only", action="store_true", help="Run Tier 1 + Tier 2 selection")
     parser.add_argument("--no-publish", action="store_true", help="Skip publishing")
+    parser.add_argument(
+        "--date",
+        type=str,
+        default=None,
+        help="Backfill: produce briefing for YYYY-MM-DD (skip dedup, skip mark-processed)",
+    )
     parser.add_argument("--limit", type=int, default=None, help="Limit items processed (for --classify-only)")
     return parser
 
@@ -101,7 +108,15 @@ def main(argv: list[str] | None = None) -> int:
         return asyncio.run(run_select_only(project_dir, args.limit, args.config))
 
     # 默认:完整 pipeline
-    return asyncio.run(run_pipeline(project_dir, args.no_publish, args.limit, args.config))
+    date = _parse_date(args.date)
+    return asyncio.run(run_pipeline(project_dir, args.no_publish, args.limit, args.config, date=date))
+
+
+def _parse_date(s: str | None):
+    """解析 --date YYYY-MM-DD 为 UTC datetime,返回 None 表示用当前时间。"""
+    if s is None:
+        return None
+    return datetime.strptime(s, "%Y-%m-%d").replace(tzinfo=UTC)
 
 
 if __name__ == "__main__":

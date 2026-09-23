@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: "17 0 * * *"  # UTC 00:17 每日
   workflow_dispatch:
+    inputs:
+      date:
+        description: "Backfill date YYYY-MM-DD (empty = today)"
+        required: false
+        default: ""
 
 # 单一并发,避免并发跑覆盖 Pages 提交
 concurrency:
@@ -46,17 +51,24 @@ jobs:
           RSSHUB_BASE_URL: ${{ secrets.RSSHUB_BASE_URL }}
           FLUXSIFT_FEED_URL: ${{ secrets.FLUXSIFT_FEED_URL }}
         run: |
-          uv run rss-reader --log-level INFO
+          BACKFILL="${{ github.event.inputs.date }}"
+          if [ -n "$BACKFILL" ]; then
+            uv run rss-reader --log-level INFO --date "$BACKFILL"
+          else
+            uv run rss-reader --log-level INFO
+          fi
 
       - name: Commit and push briefing
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/_posts/ data/dedup.db || true
+          git add docs/_posts/ data/summaries/ data/dedup.db || true
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "docs(daily): $(date -u +%Y-%m-%d) briefing"
+            BACKFILL="${{ github.event.inputs.date }}"
+            MSG_DATE="${BACKFILL:-$(date -u +%Y-%m-%d)}"
+            git commit -m "docs(daily): $MSG_DATE briefing"
             # 运行期间可能有新 push,rebase 后再推,避免 fast-forward 拒绝
             git pull --rebase origin main
             git push

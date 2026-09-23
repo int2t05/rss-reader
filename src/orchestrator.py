@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -275,11 +275,14 @@ async def run_pipeline(
     no_publish: bool,
     limit: int | None,
     config_path: str | None = None,
+    date: datetime | None = None,
 ) -> int:
     """完整 pipeline:消费队列 → Tier1 分类+打分+摘要 → Tier2 选取+去重 → 渲染日报 → 落盘 + 发布。
 
     每源消费未处理条目的前 _MAX_PER_SOURCE_PER_RUN 条,处理后标记(消费位点),
     超限条目下次运行继续。--no-publish 跳过发布,仅落盘到 data/summaries/。
+    date 非 None 时进入回填模式:用指定日期命名输出,跳过 dedup 过滤与标记
+    (处理当前 feed 全部条目,不推进消费位点,避免抢走正常运行的条目)。
     """
     try:
         cfg = load_config(project_dir, config_path)
@@ -287,7 +290,9 @@ async def run_pipeline(
         err_console.print(f"[red]Config error:[/red] {e}")
         return 1
 
-    items = await _fetch_all_items(cfg, dedup_store=_dedup_store(project_dir))
+    # 回填模式不过滤 dedup,正常模式过滤已消费条目
+    dedup_store = None if date is not None else _dedup_store(project_dir)
+    items = await _fetch_all_items(cfg, dedup_store=dedup_store)
     if not items:
         err_console.print("[yellow]No items fetched.[/yellow]")
         return 0
@@ -311,28 +316,31 @@ async def run_pipeline(
     err_console.print(f"[bold]Tier 2 selected {len(selected)} items.[/bold]")
 
     if not selected:
-        _mark_processed(project_dir, items)
+        if date is None:
+            _mark_processed(project_dir, items)
         err_console.print("[yellow]No items selected after Tier 2.[/yellow]")
         return 0
 
-    # 渲染中文日报
+    # 渲染中文日报(date 为回填日期,否则当前时间)
+    now = date or datetime.now(UTC)
     err_console.print("[bold]Rendering daily briefing...[/bold]")
-    content = render_markdown(selected, date=datetime.now(timezone.utc))
+    content = render_markdown(selected, date=now)
 
     # 落盘
     summaries_dir = (project_dir or Path.cwd()) / "data" / "summaries"
     store = SummaryStore(summaries_dir)
-    store.save(content=content, date=datetime.now(timezone.utc))
+    store.save(content=content, date=now)
     err_console.print(f"[green]Saved summaries to {summaries_dir}[/green]")
 
     # 发布
     if not no_publish:
-        await _publish(cfg, project_dir, content)
+        await _publish(cfg, project_dir, content, now)
     else:
         err_console.print("[yellow]Skipping publish (--no-publish).[/yellow]")
 
-    # 跨轮去重:标记本轮处理的 item,下次 pipeline 跳过(省 AI 调用)
-    _mark_processed(project_dir, items)
+    # 跨轮去重:回填模式不标记(不抢正常运行的消费位点)
+    if date is None:
+        _mark_processed(project_dir, items)
 
     console.print("\n[bold green]Pipeline complete.[/bold green]")
     console.print(f"  Fetched: {len(items)} items")
@@ -357,15 +365,15 @@ def _mark_processed(project_dir: Path | None, items: list) -> None:
     store.close()
 
 
-async def _publish(cfg: Config, project_dir: Path | None, content: str) -> None:
-    """发布简报:GitHub Pages + Webhook。"""
+async def _publish(cfg: Config, project_dir: Path | None, content: str, date: datetime) -> None:
+    """发布简报:GitHub Pages + Webhook。date 控制文件名与 front matter 日期。"""
     outputs = cfg.outputs
 
     # GitHub Pages
     if outputs.get("github_pages", False):
         posts_dir = (project_dir or Path.cwd()) / "docs" / "_posts"
         publisher = GitHubPagesPublisher(posts_dir)
-        publisher.publish(content=content, date=datetime.now(timezone.utc))
+        publisher.publish(content=content, date=date)
         err_console.print(f"[green]Published to GitHub Pages: {posts_dir}[/green]")
 
     # Webhook
@@ -374,7 +382,7 @@ async def _publish(cfg: Config, project_dir: Path | None, content: str) -> None:
         webhook_publisher = WebhookPublisher(webhook_configs)
         results = await webhook_publisher.publish(
             content=content[:2000],  # 截断避免过长
-            date=datetime.now(timezone.utc),
+            date=datetime.now(UTC),
         )
         success_count = sum(1 for s, _ in results if s)
         err_console.print(f"[green]Webhook: {success_count}/{len(results)} succeeded[/green]")
