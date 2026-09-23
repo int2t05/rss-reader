@@ -1,5 +1,4 @@
-# 系统工程:大厂工程博客 + 框架官方 + 中文技术媒体(20 源)
-# 迁移自 rss-feed/config.txt tech 分类,拆为三个子类
+# 系统工程:大厂工程博客 + 基础设施厂商 + 框架官方 + 中文技术媒体(31 源)
 - name: Cloudflare Blog
   url: https://blog.cloudflare.com/rss/
   category: systems/eng-blog
@@ -96,6 +95,22 @@
   url: https://shopify.engineering/feed
   category: systems/eng-blog
 
+- name: Kubernetes
+  url: https://kubernetes.io/feed.xml
+  category: systems/eng-blog
+
+- name: Docker Blog
+  url: https://www.docker.com/blog/feed/
+  category: systems/eng-blog
+
+- name: HashiCorp
+  url: https://www.hashicorp.com/blog/feed.xml
+  category: systems/eng-blog
+
+- name: Databricks
+  url: https://www.databricks.com/feed
+  category: systems/eng-blog
+
 - name: Go Blog
   url: https://go.dev/blog/feed.atom
   category: systems/framework
@@ -107,7 +122,3 @@
 - name: PostgreSQL
   url: https://planet.postgresql.org/rss20.xml
   category: systems/framework
-
-- name: Anthropic Research
-  url: /anthropic/research
-  category: systems/eng-blog

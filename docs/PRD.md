@@ -34,12 +34,11 @@
 
 ```mermaid
 flowchart LR
-    ROOT[7 大类] --> AI[ai-research<br/>AI 研究 7.0/8]
+    ROOT[6 大类] --> AI[ai-research<br/>AI 研究 7.0/8]
     ROOT --> RES[research<br/>论文科研 7.0/5]
     ROOT --> SYS[systems<br/>系统工程 5.0/5]
     ROOT --> DEV[dev-community<br/>开发者社区 5.0/5]
     ROOT --> NEWS[tech-news<br/>科技资讯 4.0/5]
-    ROOT --> SELF[self-built<br/>自建源 4.0/3]
     ROOT --> VID[video<br/>视频 4.0/3]
     AI --> A1[ai-vendor 厂商]
     AI --> A2[ai-researcher 研究者]
@@ -57,7 +56,6 @@ flowchart LR
     DEV --> D4[reddit]
     NEWS --> N1[cn-news]
     NEWS --> N2[en-news]
-    SELF --> SE1[auto-trend]
     VID --> V1[bilibili]
     VID --> V2[youtube]
     VID --> V3[fluxsift]

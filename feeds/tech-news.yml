@@ -1,5 +1,4 @@
-# 科技资讯:中文科技媒体 + 英文科技媒体(13 源)
-# 迁移自 rss-feed/config.txt news 分类
+# 科技资讯:中文科技媒体 + 英文科技媒体(17 源)
 # RSSHub 路由(/ 开头)需配置 RSSHUB_BASE_URL,未配置时自动跳过
 - name: Solidot
   url: /solidot
@@ -59,4 +58,8 @@
 
 - name: Ars Technica
   url: https://feeds.arstechnica.com/arstechnica/index
+  category: tech-news/en-news
+
+- name: Google Blog
+  url: https://blog.google/rss/
   category: tech-news/en-news

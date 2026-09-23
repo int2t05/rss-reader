@@ -1,5 +1,0 @@
-# 自建源:auto-trend(GitHub Trending 分析,直链 RSS)
-# FluxSift 已迁至 video 分类。新自建源产出 RSS 即可订阅,零适配代码
-- name: auto-trend
-  url: https://int2t05.github.io/auto-trend/feed.xml
-  category: self-built/auto-trend

@@ -1,5 +1,4 @@
-# 开发者社区:GitHub Trending + 论坛 + Reddit(20+ 源)
-# 迁移自 rss-feed/config.txt community 分类,补回 V2EX/掘金/博客园/开源中国/LinuxDo
+# 开发者社区:GitHub Trending + 论坛 + Reddit(25 源)
 # RSSHub 路由(/ 开头)需配置 RSSHUB_BASE_URL,未配置时自动跳过
 - name: GitHub Trending Python
   url: /github/trending/daily/python
@@ -15,6 +14,11 @@
 
 - name: GitHub Trending Rust
   url: /github/trending/daily/rust
+  category: dev-community/github-trending
+
+# auto-trend:自建 GitHub Trending LLM 分析日报(直链 RSS)
+- name: auto-trend
+  url: https://int2t05.github.io/auto-trend/feed.xml
   category: dev-community/github-trending
 
 - name: GitHub Topic LLM
@@ -71,26 +75,6 @@
 
 - name: Product Hunt
   url: https://producthunt.com/feed
-  category: dev-community/forums
-
-- name: Kubernetes
-  url: https://kubernetes.io/feed.xml
-  category: dev-community/forums
-
-- name: Docker Blog
-  url: https://www.docker.com/blog/feed/
-  category: dev-community/forums
-
-- name: HashiCorp
-  url: https://www.hashicorp.com/blog/feed.xml
-  category: dev-community/forums
-
-- name: Databricks
-  url: https://www.databricks.com/feed
-  category: dev-community/forums
-
-- name: Google Blog
-  url: https://blog.google/rss/
   category: dev-community/forums
 
 - name: Stack Overflow

@@ -8,7 +8,7 @@ You are a senior Python engineer on the rss-reader project — an async-first RS
 
 ## Project
 
-**rss-reader** — a personal information aggregation and AI summary system. It fetches RSS feeds (including self-built source auto-trend and video sources), classifies and scores them with AI, selects the top items per category, and renders a Chinese daily briefing.
+**rss-reader** — a personal information aggregation and AI summary system. It fetches RSS feeds (including self-built and video sources), classifies and scores them with AI, selects the top items per category, and renders a Chinese daily briefing.
 
 ## Stack
 
@@ -52,13 +52,12 @@ categories/              # Per-category config
 ├── <cat>/
 │   └── category.json    # threshold, digest_limit, display_name, children, enabled
 
-feeds/                   # RSS source configs (YAML, 168 sources across 7 categories)
+feeds/                   # RSS source configs (YAML, 6 categories)
 ├── ai-research.yml      # AI 厂商 + 研究者 + 论文
 ├── research.yml         # arXiv 全 CS 子类 + stat/physics/quant/math/q-bio + 期刊会议
 ├── systems.yml          # 工程博客 + 框架官方 + 中文技术媒体
 ├── dev-community.yml    # GitHub Trending + 论坛 + Reddit
 ├── tech-news.yml        # 中文 + 英文科技媒体
-├── self-built.yml       # auto-trend
 └── video.yml            # YouTube + B 站 + FluxSift
 
 data/
@@ -104,7 +103,7 @@ uv run ruff check .
 - **Two-tier pipeline, not full-agent.** Tier 1 (classify + score + summary, single LLM per item, all items, concurrency 10), Tier 2 (program logic, zero AI except batched topic dedup). Do not add a Tier 3 agent loop — cost budget depends on this.
 - **RSS feed is the message queue.** `RSSSource.fetch()` returns ALL items in the feed — no time-window filtering (no `since`). `DedupStore` is the consumption checkpoint: already-processed `item_id`s are filtered before Tier 1, so each item is analyzed exactly once; unprocessed items beyond the per-source daily cap (`_MAX_PER_SOURCE_PER_RUN = 30` in orchestrator) stay in the queue and are consumed on the next run (checkpoint resume). Never add time-window filtering or a separate backlog queue — the feed + DedupStore already form the queue.
 - **Batched topic dedup.** Large category groups are chunked (`_TOPIC_DEDUP_CHUNK = 30`) and deduped concurrently via `asyncio.gather`, bounding prompt size and avoiding single huge LLM calls.
-- **Category tree, not Profile.** 7 top-level categories (`ai-research`, `research`, `systems`, `dev-community`, `tech-news`, `self-built`, `video`) + subcategories. Each category has its own `threshold` and `digest_limit`. `finance` and `crypto` are reserved (`enabled: false`) — enabling them is config-only.
+- **Category tree, not Profile.** 6 top-level categories (`ai-research`, `research`, `systems`, `dev-community`, `tech-news`, `video`) + subcategories. Each category has its own `threshold` and `digest_limit`. `finance` and `crypto` are reserved (`enabled: false`) — enabling them is config-only.
 - **RSS is the universal source interface.** Self-built sources (auto-trend, FluxSift) MUST produce RSS and be subscribed to — zero adapter code. `Source` Protocol is a reserved extension point for future non-RSS sources only.
 
 ### AI client

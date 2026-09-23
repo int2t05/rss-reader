@@ -1,5 +1,4 @@
-# 论文科研:arXiv CS 子类扩充 + 统计 ML + 物理/量化/数学 + 期刊会议
-# 从 rss-feed academic 扩充:全 CS 子类 + stat + physics/quant/math/q-bio + 期刊会议
+# 论文科研:arXiv 全 CS 子类 + 统计 ML + 物理/量化/数学 + 期刊会议(39 源)
 
 - name: arXiv cs.CL
   url: https://rss.arxiv.org/rss/cs.CL
@@ -75,6 +74,14 @@
 
 - name: arXiv cs.SI
   url: https://rss.arxiv.org/rss/cs.SI
+  category: research/arxiv-cs
+
+- name: arXiv cs.AI
+  url: https://rss.arxiv.org/rss/cs.AI
+  category: research/arxiv-cs
+
+- name: arXiv cs.LG
+  url: https://rss.arxiv.org/rss/cs.LG
   category: research/arxiv-cs
 
 - name: arXiv stat.ML

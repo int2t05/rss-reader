@@ -1,11 +1,14 @@
-# AI 研究:厂商博客 + 研究者博客 + AI 论文(20 源)
-# 迁移自 rss-feed/config.txt ai 分类,拆为三个子类
+# AI 研究:厂商博客 + 研究者博客 + 精选论文(25 源)
 - name: Anthropic News
   url: https://www.anthropic.com/news/rss.xml
   category: ai-research/ai-vendor
 
 - name: Anthropic Engineering
   url: https://www.anthropic.com/engineering/rss.xml
+  category: ai-research/ai-vendor
+
+- name: Anthropic Research
+  url: /anthropic/research
   category: ai-research/ai-vendor
 
 - name: OpenAI News
@@ -94,12 +97,4 @@
 
 - name: HuggingFace Daily Papers
   url: https://huggingface.co/papers/feed
-  category: ai-research/ai-papers
-
-- name: arXiv cs.AI
-  url: https://rss.arxiv.org/rss/cs.AI
-  category: ai-research/ai-papers
-
-- name: arXiv cs.LG
-  url: https://rss.arxiv.org/rss/cs.LG
   category: ai-research/ai-papers

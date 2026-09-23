@@ -44,13 +44,6 @@
       "digest_limit": 5,
       "children": ["cn-news", "en-news"]
     },
-    "self-built": {
-      "enabled": true,
-      "display_name": {"en": "Self-built Sources", "zh": "自建源"},
-      "threshold": 4.0,
-      "digest_limit": 3,
-      "children": ["fluxsift", "auto-trend"]
-    },
     "finance": {"enabled": false, "display_name": {"en": "Finance", "zh": "财经"}, "threshold": 6.0, "digest_limit": 3, "children": []},
     "crypto": {"enabled": false, "display_name": {"en": "Crypto", "zh": "加密货币"}, "threshold": 6.0, "digest_limit": 3, "children": []}
   },

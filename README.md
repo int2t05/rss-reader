@@ -56,7 +56,7 @@ flowchart LR
 
 ## 功能
 
-- 7 大类(ai-research/research/systems/dev-community/tech-news/self-built/video)+ 子类分类树
+- 6 大类(ai-research/research/systems/dev-community/tech-news/video)+ 子类分类树
 - DedupStore 跨轮去重(每条目恰好处理一次,无丢弃无重处理),批量主题去重(大组分块并发)控制 prompt 大小
 - 中文每日简报
 - GitHub Pages(Chirpy 主题,Actions 构建)+ Webhook(飞书/Slack/Discord/自定义,并发)
