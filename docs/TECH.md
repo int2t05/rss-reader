@@ -14,7 +14,7 @@ LLM:OpenAI 兼容端点(本项目用 GLM via 火山方舟,与 Claude Code 同凭
 flowchart TB
     subgraph 配置
         CFG[data/config.json]
-        FEEDS[feeds/*.yml 168 源]
+        FEEDS[feeds/*.yml 172 源]
         CATS[categories/*/category.json]
     end
 
@@ -24,7 +24,7 @@ flowchart TB
     end
 
     subgraph Tier1
-        CLS[ContentClassifier<br/>单次 LLM 分类+打分+摘要<br/>并发 10]
+        CLS[ContentClassifier<br/>单次 LLM 分类+打分+摘要<br/>并发 20]
     end
 
     subgraph Tier2
@@ -55,7 +55,7 @@ flowchart TB
     RND --> SUM
     RND --> PAGES
     RND --> HOOK
-    CLS -->|mark_processed| DEDUP
+    ORCH[orchestrator] -->|mark_processed| DEDUP
 ```
 
 ## 模块
@@ -108,7 +108,7 @@ OpenAI 兼容,`tenacity` 重试 429/5xx/超时(3 次指数退避,4xx 不重试)�
 ```python
 class ContentClassifier:
     async def classify_and_score(self, item: ContentItem) -> None  # 原地填 analysis
-    async def classify_batch(self, items: list[ContentItem]) -> list[ContentItem]  # 并发 10
+    async def classify_batch(self, items: list[ContentItem]) -> list[ContentItem]  # 并发(analysis_concurrency)
 ```
 
 单次 LLM 合并分类+打分+摘要,JSON 修复重试一次(temperature=0)。
@@ -137,7 +137,7 @@ class GitHubPagesPublisher:
     def publish(self, content: str, date: datetime) -> Path  # Chirpy front matter
 
 class WebhookPublisher:
-    async def publish(self, content: str, date: datetime) -> list[tuple[bool, str | None]]  # 并发
+    async def publish(self, content: str) -> list[tuple[bool, str | None]]  # 并发
 ```
 
 `GitHubPagesPublisher` 写 Chirpy front matter(layout/title/date 带时区/categories/tags)。`WebhookPublisher` 支持 Feishu/Slack/Discord/Custom,`asyncio.gather` 并发。
@@ -153,6 +153,10 @@ class SummaryStore:
     def save(self, content: str, date: datetime) -> Path
     def load(self, date: datetime) -> str | None
 ```
+
+### 站点阅读工具(`docs/_includes/`)
+
+`metadata-hook.html` 以 Liquid 守卫(`page.url contains 'daily-briefing'`)仅在简报页装配 `briefing-tools.html` —— 纯客户端 JS+CSS IIFE,零依赖零构建。DOM 结构约定:`.content` 下 `h2` 为分类、含外链 `a[href]` 的 `h3` 为条目、后随兄弟为详情;注入按钮空文本、CSS `::before` 出字形,避免污染 tocbot 按 textContent 构建的 TOC。功能:单条已读切换 / 分类与整日批量标记 / 只看未读(全读分类连 h2 隐藏)/ 进度 `已读 N/M`。已读状态以条目 URL 为 key 存 `localStorage`(键 `rss-reader.read-urls`,插入序 JSON 数组,FIFO 上限 10000),跨日简报共享,换浏览器不同步。纯显示层,不影响管线与选取逻辑。
 
 ## 数据流
 
@@ -186,15 +190,16 @@ sequenceDiagram
 | 数据 | 方案 | 路径 |
 |---|---|---|
 | 每日总结 | Markdown | `data/summaries/YYYY-MM-DD.md` |
-| GitHub Pages | Jekyll(Chirpy) | `docs/_posts/YYYY-MM-DD.md` |
+| GitHub Pages | Jekyll(Chirpy) | `docs/_posts/YYYY-MM-DD-daily-briefing.md` |
 | 去重状态 | SQLite(WAL) | `data/dedup.db` |
+| 读者已读状态 | localStorage(JSON 数组,FIFO 上限 10000) | 浏览器本地,键 `rss-reader.read-urls` |
 | 主配置 | JSON | `data/config.json` |
-| 源配置 | YAML | `feeds/*.yml`(7 文件,168 源) |
+| 源配置 | YAML | `feeds/*.yml`(6 文件,172 源) |
 | 分类配置 | JSON | `categories/*/category.json` |
 
 ## 安全
 
 - API key:存 `.env`,`api_key_env` 仅存环境变量名
 - `trust_env=False`:所有 httpx 客户端禁用系统代理(CI 友好)
-- 速率:`analysis_concurrency=10` Semaphore;`tenacity` 对 429/5xx/超时指数退避(3 次)
+- 速率:`analysis_concurrency` Semaphore(当前 20);`tenacity` 对 429/5xx/超时指数退避(3 次)
 - 队列消费:`DedupStore` 为消费位点,每源每日消费上限 30 条(`_MAX_PER_SOURCE_PER_RUN`),超限条目下次运行继续(断点续传),无丢弃

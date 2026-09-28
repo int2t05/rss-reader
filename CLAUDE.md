@@ -17,10 +17,9 @@ You are a senior Python engineer on the rss-reader project — an async-first RS
 - **Async HTTP**: httpx
 - **RSS parsing**: feedparser
 - **Data models**: pydantic v2
-- **LLM client**: openai SDK (OpenAI-compatible; 本项目用 GLM via 火山方舟,与 Claude Code 同凭证机制:`.env` 配 `OPENAI_API_KEY`/`OPENAI_BASE_URL`/`OPENAI_MODEL`)
+- **LLM client**: openai SDK (OpenAI-compatible; concrete provider setup in `docs/TECH.md`)
 - **Terminal UI**: rich (progress bars, logging)
 - **Retry**: tenacity (exponential backoff, 429/5xx/timeout)
-- **Markdown rendering**: markdown-it-py
 - **Dedup storage**: sqlite3 (stdlib, zero-config, WAL)
 - **Config**: JSON (`data/config.json`) + YAML (`feeds/*.yml`)
 - **CI / hosting**: GitHub Actions cron (pipeline) + GitHub Actions build (Chirpy Jekyll) + GitHub Pages
@@ -29,30 +28,29 @@ You are a senior Python engineer on the rss-reader project — an async-first RS
 
 ```
 src/
-├── main.py              # CLI entrypoint (argparse: --project-dir, --config, --log-level)
-├── orchestrator.py      # Two-tier pipeline orchestration
-├── models.py            # ContentItem, ContentAnalysis, CategoryConfig
-├── config.py            # JSON + YAML loading, ${VAR} env expansion
-├── sources/             # Source Protocol + RSSSource + RSSHubSource + SourceRegistry
+├── main.py              # CLI 入口(argparse:--project-dir/--config/--log-level/--date/--limit)
+├── orchestrator.py      # 两段式管线编排
+├── models.py            # ContentItem、ContentAnalysis、CategoryConfig
+├── config.py            # JSON + YAML 加载,${VAR} 环境变量展开
+├── sources/             # Source Protocol + RSSSource + build_source 工厂 + SourceRegistry
 ├── ai/
-│   ├── client.py        # AIClient (multi-provider, OpenAI-compatible, tenacity retry)
-│   ├── classifier.py    # Tier 1: classify + score + summary (single LLM call, concurrency 10)
-│   ├── selector.py      # Tier 2: URL dedup + threshold + batched topic dedup + quota
-│   └── prompting/       # classification.py, deduplication.py (Python-generated prompts)
+│   ├── client.py        # AIClient(多 provider,OpenAI 兼容,tenacity 重试)
+│   ├── classifier.py    # Tier 1:分类+打分+摘要(单次 LLM 调用)
+│   ├── selector.py      # Tier 2:URL 去重 + 阈值 + 批量主题去重 + 配额
+│   └── prompting/       # classification.py、deduplication.py(Python 生成 prompt)
 ├── processing/
 │   ├── categories.py    # CategoryRegistry
-│   ├── content.py       # content splitting / sampling
-│   └── dedup.py         # URL normalization + topic dedup grouping
-├── render/              # markdown.py (Chinese daily briefing renderer)
-├── publish/             # pages.py (GitHub Pages) + webhook.py
-├── storage/             # summaries.py + dedup.py (SQLite, WAL)
-└── utils/               # url.py (normalization), env.py (${VAR} expansion)
+│   └── dedup.py         # URL 规范化 + 主题去重分组
+├── render/              # markdown.py(中文每日简报渲染)
+├── publish/             # pages.py(GitHub Pages)+ webhook.py
+├── storage/             # summaries.py + dedup.py(SQLite,WAL)
+└── utils/               # url.py(URL 规范化)、env.py(${VAR} 展开)
 
-categories/              # Per-category config
+categories/              # 分类配置
 ├── <cat>/
-│   └── category.json    # threshold, digest_limit, display_name, children, enabled
+│   └── category.json    # threshold、digest_limit、display_name、children、enabled
 
-feeds/                   # RSS source configs (YAML, 6 categories)
+feeds/                   # RSS 源配置(YAML)
 ├── ai-research.yml      # AI 厂商 + 研究者 + 论文
 ├── research.yml         # arXiv 全 CS 子类 + stat/physics/quant/math/q-bio + 期刊会议
 ├── systems.yml          # 工程博客 + 框架官方 + 中文技术媒体
@@ -61,13 +59,16 @@ feeds/                   # RSS source configs (YAML, 6 categories)
 └── video.yml            # YouTube + B 站 + FluxSift
 
 data/
-├── config.json          # Main config (ai, rsshub_base_url, categories, outputs)
-├── summaries/           # Daily summary Markdown output
-└── dedup.db             # SQLite dedup state (item_id + fetched_at)
+├── config.json          # 主配置(ai、rsshub_base_url、categories、outputs)
+├── summaries/           # 每日简报 Markdown 输出
+└── dedup.db             # SQLite 去重状态(item_id + fetched_at)
 
-docs/                    # Chirpy 站点 + formal docs(见 Formal docs 段)
+docs/                    # Chirpy 站点 + 正式文档(见 Formal docs 段)
 ├── _config.yml          # Chirpy 配置(theme: jekyll-theme-chirpy)
 ├── Gemfile              # 锁 jekyll-theme-chirpy gem
+├── _includes/
+│   ├── metadata-hook.html  # 站点级 head 钩子(头像/topbar 注入 + 简报工具装配)
+│   └── briefing-tools.html # 简报页已读标记:纯客户端 JS+CSS,localStorage 存 URL 集
 ├── _tabs/               # 导航入口(archives/categories/tags/about)
 ├── _posts/              # 每日简报(Chirpy front matter: date/categories/tags)
 └── index.html / 404.html / robots.txt
@@ -85,8 +86,10 @@ uv run rss-reader                                  # full pipeline
 uv run rss-reader --check-config                   # validate config + sources
 uv run rss-reader --fetch-only                     # fetch only (queue overview)
 uv run rss-reader --classify-only                  # Tier 1 only
+uv run rss-reader --classify-only --limit 10       # Tier 1 only, cap processed items
 uv run rss-reader --select-only                    # Tier 1 + 2
 uv run rss-reader --no-publish                     # full pipeline, skip publishing
+uv run rss-reader --date YYYY-MM-DD                # backfill: skip dedup filter, do not advance checkpoint
 uv run rss-reader --log-level DEBUG
 
 # Test
@@ -100,7 +103,7 @@ uv run ruff check .
 
 ### Architecture contract (binding)
 
-- **Two-tier pipeline, not full-agent.** Tier 1 (classify + score + summary, single LLM per item, all items, concurrency 10), Tier 2 (program logic, zero AI except batched topic dedup). Do not add a Tier 3 agent loop — cost budget depends on this.
+- **Two-tier pipeline, not full-agent.** Tier 1 (classify + score + summary, single LLM per item, all items, concurrency via `analysis_concurrency`), Tier 2 (program logic, zero AI except batched topic dedup). Do not add a Tier 3 agent loop — cost budget depends on this.
 - **RSS feed is the message queue.** `RSSSource.fetch()` returns ALL items in the feed — no time-window filtering (no `since`). `DedupStore` is the consumption checkpoint: already-processed `item_id`s are filtered before Tier 1, so each item is analyzed exactly once; unprocessed items beyond the per-source daily cap (`_MAX_PER_SOURCE_PER_RUN = 30` in orchestrator) stay in the queue and are consumed on the next run (checkpoint resume). Never add time-window filtering or a separate backlog queue — the feed + DedupStore already form the queue.
 - **Batched topic dedup.** Large category groups are chunked (`_TOPIC_DEDUP_CHUNK = 30`) and deduped concurrently via `asyncio.gather`, bounding prompt size and avoiding single huge LLM calls.
 - **Category tree, not Profile.** 6 top-level categories (`ai-research`, `research`, `systems`, `dev-community`, `tech-news`, `video`) + subcategories. Each category has its own `threshold` and `digest_limit`. `finance` and `crypto` are reserved (`enabled: false`) — enabling them is config-only.
@@ -109,9 +112,9 @@ uv run ruff check .
 ### AI client
 
 - OpenAI-compatible only. Configure via `provider` + `api_key_env` + `model` + optional `base_url`. `api_key_env` holds the env var NAME, never the key itself.
-- JSON repair: one retry at `temperature=0` with a corrective instruction. A second failure falls back to defaults (score=None, reason="Analysis response parse failed"). Do not retry more than once.
+- JSON repair: one retry at `temperature=0` with a corrective instruction. A second failure falls back to defaults (score=0.0, reason="Analysis response parse failed"). Do not retry more than once.
 - Network retry: `tenacity` retries 429/5xx/timeout/connection errors 3× with exponential backoff. 4xx (auth/param) errors are NOT retried.
-- Concurrency: `analysis_concurrency` semaphore (default 10).
+- Concurrency: `analysis_concurrency` semaphore (code default 5; `data/config.json` currently 20).
 
 ### Data layer
 
@@ -153,7 +156,7 @@ class RSSSource:
 ### Always do
 
 - Follow the two-tier pipeline contract. Tier 2 must be zero-AI (except batched topic dedup, chunked to bound prompt size).
-- Never truncate fetched items. `RSSSource.fetch()` returns all items in window; `DedupStore` ensures each is processed exactly once. No item dropped, no backlog queue needed.
+- Never truncate fetched items. `RSSSource.fetch()` returns all items in the feed; `DedupStore` ensures each is processed exactly once. No item dropped, no backlog queue needed.
 - Treat `finance` / `crypto` as reserved. Do not delete their `category.json` (enabled: false). Enabling is config-only.
 - Subscribe to self-built sources via RSS only. If a new self-built source cannot produce RSS, stop and confirm with the user before writing a `Source` adapter.
 - Write real tests with real data (per global convention). RSS tests fetch live feeds; LLM tests call real models.
@@ -168,7 +171,7 @@ class RSSSource:
 - Never delete or narrow reserved categories (`finance`, `crypto`) — they are module placeholders.
 - Never auto-commit / auto-push. Report status + diff, wait for instruction.
 - Never enable RSSHub sources without `rsshub_base_url` configured. RSSHub-prefixed URLs (`/solidot`) are silently skipped when `rsshub_base_url` is null.
-- Never add a web server / API service / frontend. This is a batch job — fetch, analyze, publish, exit.
+- Never add a web server / API service / interactive frontend. This is a batch job — fetch, analyze, publish, exit. Static, dependency-free, display-only client JS in `docs/_includes/` (published-site reading enhancements such as the briefing read-state marks) is part of the site and allowed; it must never touch the pipeline or selection logic.
 
 ## Formal docs
 
@@ -176,8 +179,8 @@ Authoritative documents in `docs/`:
 
 - `docs/PRD.md` — product requirements (vision, user stories, functional/non-functional requirements, acceptance criteria)
 - `docs/TECH.md` — technical design (stack, architecture, modules, interfaces, storage, security)
-- `docs/API/` — (reserved) external API contracts, if any are introduced
-- `docs/FLOW/` — (reserved) runtime flow diagrams, if complex flows need documentation
-- `docs/TODO.md` — (reserved) open audit items and follow-ups
+- `docs/API/README.md` — CLI interface, config schema, data models
+- `docs/FLOW/README.md` — runtime flow diagrams (mermaid) + detailed data-flow narrative
+- `docs/TODO.md` — open items and future directions
 
 Development-stage artifacts (`docs/PLAN.md`, `docs/research/`, `docs/architecture/`) exist for reference but are not formal docs — they record how we got here, not what the system is.

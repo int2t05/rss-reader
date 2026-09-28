@@ -15,7 +15,8 @@ def category_tree_json() -> str:
     """模拟 CategoryRegistry.category_tree_json() 输出。"""
     return (
         '{\n'
-        '  "ai-research": {"display_name": "AI 研究", "threshold": 7.0, "children": ["ai-vendor", "ai-researcher", "ai-papers"]},\n'
+        '  "ai-research": {"display_name": "AI 研究", "threshold": 7.0, '
+        '"children": ["ai-vendor", "ai-researcher", "ai-papers"]},\n'
         '  "systems": {"display_name": "系统工程", "threshold": 5.0, "children": ["eng-blog", "framework"]}\n'
         '}'
     )

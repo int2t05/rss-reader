@@ -1,5 +1,5 @@
 """跨源 URL 去重 + 分类分组测试:纯逻辑,无网络无 LLM。"""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from src.models import ContentAnalysis, ContentItem, ItemProcessing, SourceType
 from src.processing.dedup import dedup_by_url, group_by_category
@@ -20,7 +20,7 @@ def _make_item(
         url=url,
         content="内容",
         author="作者",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
         processing=ItemProcessing(
             analysis=ContentAnalysis(
                 category_path=category_path,
@@ -99,7 +99,7 @@ def test_dedup_by_url_no_analysis_kept():
         url="https://example.com/unique",
         content="",
         author="",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
         processing=None,
     )
     items = [item_no_analysis, _make_item("y", "https://example.com/other", score=7.0)]
@@ -149,7 +149,7 @@ def test_group_by_category_no_analysis_skipped():
         url="https://example.com/unique",
         content="",
         author="",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
         processing=None,
     )
     items = [item_no_analysis, _make_item("y", "https://x.com/2", category_path="ai-research/ai-papers")]

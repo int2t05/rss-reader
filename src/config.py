@@ -29,17 +29,12 @@ class Config:
         data_dir: Path,
     ):
         self.ai = ai
-        self.categories = categories  # raw dict from config.json
-        self.category_configs = category_configs  # enabled only
-        self.sources = sources  # enabled only
+        self.categories = categories  # config.json 原始 dict
+        self.category_configs = category_configs  # 仅启用分类
+        self.sources = sources  # 仅启用源
         self.outputs = outputs
         self.rsshub_base_url = rsshub_base_url
         self.data_dir = data_dir
-
-    @property
-    def enabled_category_names(self) -> list[str]:
-        """启用分类名列表,供 Tier1/Tier2 路由使用。"""
-        return [c.name for c in self.category_configs]
 
 
 def _load_category_configs(categories_root: Path, raw_categories: dict) -> list[CategoryConfig]:

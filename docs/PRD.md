@@ -9,18 +9,20 @@
 - 每日 10 分钟掌握 AI/CS/论文/工程/视频领域动态
 - 按分类查看简报,同事件多源合并,论文门槛高于新闻
 - 自建源(auto-trend)产出 RSS 即可接入,零适配
+- 已读标记(站点阅读体验):简报页单条 / 分类 / 整日标记已读,只看未读,顶部进度可见;纯站点前端,localStorage 以条目 URL 为 key,跨日简报共享已读状态
 
 ## 功能边界
 
 ### 已实现
 
 - RSS 聚合:任意 RSS/Atom,`${VAR}` 展开,可选 RSSHub 路由;feed 即消息队列(无时间窗过滤),每源每日消费上限 30 条,断点续传
-- 分类体系:7 大类 + 子类,分类感知阈值 + 配额平衡
-- Tier 1:单次 LLM 分类 + 打分 + 摘要(合并调用,并发 10)
+- 分类体系:6 大类(另 finance/crypto 预留)+ 子类,分类感知阈值 + 配额平衡
+- Tier 1:单次 LLM 分类 + 打分 + 摘要(合并调用,`analysis_concurrency` 控制,当前 20)
 - Tier 2:URL 去重 + 分类阈值 + 批量主题去重 + 配额平衡(零 AI)
 - 中文渲染:产出中文 Markdown 每日简报
 - 发布:GitHub Pages(Chirpy 主题)+ Webhook(飞书/Slack/Discord/自定义,并发)
-- 落盘:`data/summaries/YYYY-MM-DD.md` + `docs/_posts/YYYY-MM-DD.md`
+- 落盘:`data/summaries/YYYY-MM-DD.md` + `docs/_posts/YYYY-MM-DD-daily-briefing.md`
+- 回填:`--date YYYY-MM-DD` 指定日期产出简报,跳过 dedup 过滤与标记(CI 手动触发用)
 - 跨轮去重:DedupStore(SQLite,WAL),已处理项跨轮跳过
 - 网络重试:tenacity 对 429/5xx/超时指数退避
 
@@ -39,7 +41,7 @@ flowchart LR
     ROOT --> SYS[systems<br/>系统工程 5.0/5]
     ROOT --> DEV[dev-community<br/>开发者社区 5.0/5]
     ROOT --> NEWS[tech-news<br/>科技资讯 4.0/5]
-    ROOT --> VID[video<br/>视频 4.0/3]
+    ROOT --> VID[video<br/>视频 4.0/8]
     AI --> A1[ai-vendor 厂商]
     AI --> A2[ai-researcher 研究者]
     AI --> A3[ai-papers 论文]
@@ -67,6 +69,7 @@ flowchart LR
 
 - `uv run rss-reader --check-config` 输出分类树与源数量
 - `uv run rss-reader` 完整 pipeline,产出 `data/summaries/` 与 `docs/_posts/`
-- `uv run python -m pytest` 全量通过(无 mock,真实数据)
-- 日 LLM 调用 < 1000 次
+- `uv run python -m pytest` 全量通过(无 LLM/网络 mock,真实数据)
+- 日 LLM 调用有界:Tier1 每条 1 次 + 批量主题去重,无 Tier 3 Agent 循环(成本预算契约)
 - GitHub Actions daily.yml 跑通,pages-deploy.yml 构建部署 Chirpy 站点
+- 简报页已读标记可用:单条切换与批量操作正确,刷新 / 跨日保持,TOC 无按钮文字残留,暗色模式配色正常,非简报页零注入(人工验收)

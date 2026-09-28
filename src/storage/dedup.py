@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -41,7 +41,7 @@ class DedupStore:
 
     def mark_processed(self, item_id: str) -> None:
         """标记 item_id 为已处理(INSERT OR IGNORE,幂等)。"""
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         self._conn.execute(
             "INSERT OR IGNORE INTO processed_items (item_id, fetched_at) VALUES (?, ?)",
             (item_id, now),

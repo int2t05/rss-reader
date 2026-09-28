@@ -29,20 +29,14 @@ def normalize_url(url: str) -> str:
     """
     parts = urlsplit(url.strip())
 
-    # 协议统一为 https
     scheme = "https"
-
-    # host 小写化
     netloc = parts.netloc.lower()
 
-    # 路径去尾斜杠(根路径除外)
     path = parts.path
     if len(path) > 1 and path.endswith("/"):
         path = path.rstrip("/")
 
-    # query 过滤追踪参数
     kept = [(k, v) for k, v in parse_qsl(parts.query, keep_blank_values=True) if not _is_tracking_param(k)]
     query = urlencode(kept)
 
-    # fragment 一律丢弃
     return urlunsplit((scheme, netloc, path, query, ""))

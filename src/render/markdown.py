@@ -56,7 +56,6 @@ def render_markdown(items: list[ContentItem], date: datetime) -> str:
     lines.append(f"**{_LABELS['stats']}**: {len(items)} {_LABELS['items']}")
     lines.append("")
 
-    # 按分类分组(按 analysis.category_path 的父分类)
     grouped: dict[str, list[ContentItem]] = defaultdict(list)
     for item in items:
         path = (
@@ -84,7 +83,6 @@ def _render_item(lines: list[str], item: ContentItem) -> None:
     """渲染单条目:标题 + 分数 + 摘要 + 标签。"""
     analysis = item.processing.analysis if item.processing and item.processing.analysis else None
 
-    # 标题行(含链接),转义 ] 与 ) 防止破坏链接语法
     title = item.title or "Untitled"
     url = item.url or "#"
     score_str = f"{analysis.score:.1f}" if analysis and analysis.score is not None else "-"
@@ -92,11 +90,9 @@ def _render_item(lines: list[str], item: ContentItem) -> None:
     lines.append("")
     lines.append(f"- **{_LABELS['score']}**: {score_str}")
 
-    # 摘要(Tier1)
     summary = analysis.summary if analysis else None
     if summary:
         lines.append(f"- **{_LABELS['summary']}**: {summary}")
 
-    # 标签
     if analysis and analysis.tags:
         lines.append(f"- **{_LABELS['tags']}: {', '.join(analysis.tags)}**")

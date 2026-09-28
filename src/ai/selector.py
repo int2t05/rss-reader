@@ -5,15 +5,12 @@
 2. 分类感知阈值过滤(每分类独立 threshold)
 3. 主题去重(可选,按父分类分组,LLM 判断同事件)
 4. 分类配额平衡(每分类 digest_limit,按分数降序截取)
-
-借鉴 Horizon merge_topic_duplicates:按分类分组降低 prompt 大小。
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional
 
 from src.ai.client import AIClient
 from src.ai.prompting.deduplication import (
@@ -31,6 +28,12 @@ logger = logging.getLogger(__name__)
 _TOPIC_DEDUP_CHUNK = 30
 
 
+def _item_brief(it: ContentItem) -> str:
+    """条目单行摘要:标题 + 摘要前 60 字(无分析时为空),供去重 prompt 使用。"""
+    analysis = it.processing.analysis if it.processing else None
+    return f"{it.title} {(analysis.summary if analysis else '')[:60]}"
+
+
 class ContentSelector:
     """Tier2 选取器:URL 去重 → 阈值过滤 → 主题去重 → 配额平衡。
 
@@ -40,7 +43,7 @@ class ContentSelector:
         # selected 为 30-50 条精选条目,按分类分组、分数降序
     """
 
-    def __init__(self, categories: CategoryRegistry, client: Optional[AIClient] = None):
+    def __init__(self, categories: CategoryRegistry, client: AIClient | None = None):
         """指定分类注册表与 AI 客户端(主题去重时必需,纯逻辑步骤可传 None)。"""
         self.categories = categories
         self.client = client
@@ -133,7 +136,7 @@ class ContentSelector:
     ) -> list[list[ContentItem]]:
         """让 LLM 判断同组内哪些条目是同一事件,返回聚类。"""
         items_summary = "\n".join(
-            f"{i + 1}. [ID: {it.id}] {it.title} {(it.processing.analysis.summary if it.processing and it.processing.analysis else '')[:60]}"
+            f"{i + 1}. [ID: {it.id}] {_item_brief(it)}"
             for i, it in enumerate(items)
         )
 

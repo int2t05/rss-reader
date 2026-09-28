@@ -149,30 +149,13 @@ def test_main_select_only_dispatches(monkeypatch: pytest.MonkeyPatch, tmp_path: 
     assert exit_code == 0
 
 
-def test_main_analyze_one_dispatches(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
-    """main() 默认(无 --no-publish)no_publish=False。"""
-    from src import main as main_mod
-
-    called: dict = {}
-
-    async def fake_run(project_dir, no_publish, limit, config_path=None):
-        called["args"] = (project_dir, no_publish, limit)
-        return 0
-
-    monkeypatch.setattr(main_mod, "run_pipeline", fake_run)
-    monkeypatch.setattr(main_mod, "load_dotenv", lambda **kw: None)
-    exit_code = main_mod.main([])
-    assert exit_code == 0
-    assert called["args"][1] is False  # 默认发布
-
-
 def test_main_default_dispatches_to_pipeline(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     """main() 默认(无子命令标志)分发到 run_pipeline(通过 spy 验证,非 mock LLM)。"""
     from src import main as main_mod
 
     called: dict = {}
 
-    async def fake_run(project_dir, no_publish, limit, config_path=None):
+    async def fake_run(project_dir, no_publish, limit, config_path=None, date=None):
         called["args"] = (project_dir, no_publish, limit)
         return 0
 
@@ -189,7 +172,7 @@ def test_main_default_no_publish_false(monkeypatch: pytest.MonkeyPatch, tmp_path
 
     called: dict = {}
 
-    async def fake_run(project_dir, no_publish, limit, config_path=None):
+    async def fake_run(project_dir, no_publish, limit, config_path=None, date=None):
         called["args"] = (project_dir, no_publish, limit)
         return 0
 

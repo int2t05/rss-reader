@@ -1,14 +1,9 @@
-"""ContentClassifier:Tier1 分类+打分,单次 LLM 调用合并分类与打分,JSON 修复重试。
-
-借鉴 Horizon src/ai/analyzer.py:并发控制(Semaphore)+ JSON 修复重试(temperature=0)。
-与 Horizon 的差异:合并分类与打分为单次调用(减半 LLM 调用量)。
-"""
+"""ContentClassifier:Tier1 分类+打分,单次 LLM 调用(减半调用量),并发控制(Semaphore)+ JSON 修复重试(temperature=0)。"""
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Optional
 
 from rich.console import Console
 from rich.progress import (
@@ -46,7 +41,7 @@ class ContentClassifier:
         self,
         ai_client: AIClient,
         categories: CategoryRegistry,
-        console: Optional[Console] = None,
+        console: Console | None = None,
     ):
         """指定 AI 客户端与分类注册表,console 用于进度条(可选)。"""
         self.client = ai_client

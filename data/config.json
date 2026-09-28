@@ -92,9 +92,6 @@
   },
   "outputs": {
     "github_pages": true,
-    "email": {
-      "enabled": false
-    },
     "webhook": []
   }
 }

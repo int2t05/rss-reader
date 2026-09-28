@@ -1,7 +1,4 @@
-"""Tier1 分类+打分 prompt 构建:system prompt 注入分类树 + 评分标准,user prompt 注入条目内容。
-
-合并分类与打分为单次 LLM 调用(借鉴 Horizon 但简化为一次调用)。
-"""
+"""Tier1 分类+打分 prompt 构建:system prompt 注入分类树 + 评分标准,user prompt 注入条目内容。"""
 
 from __future__ import annotations
 
@@ -35,7 +32,8 @@ def analysis_system_prompt(category_tree_json: str) -> str:
 - 强化学习+进化:进化引导的策略梯度、Evolution-Guided Policy Gradient、RL 与 EC 结合、reward shaping 进化
 - 数据驱动/代理辅助优化:代理模型、surrogate-assisted、classifier-assisted、昂贵优化、数据驱动优化
 - 双网建模调度:双层网络、bi-level network、双网调度、双网建模、网络化系统调度、edge-cloud 协同调度
-- 关键学者:Wei-Neng Chen、Jun Zhang、Feng-Feng Wei、Xiao-Qi Guo、Tai-You Chen、陈伟能、Qiuzhen Lin、Yue-Jiao Gong、Jin-Kao Hao
+- 关键学者:Wei-Neng Chen、Jun Zhang、Feng-Feng Wei、Xiao-Qi Guo、Tai-You Chen、陈伟能
+- 关键学者:Qiuzhen Lin、Yue-Jiao Gong、Jin-Kao Hao
 - 关键载体:IEEE TEVC / TSC / IEEE-CAA JAS 上的进化计算论文
 判断标准:主题是条目的核心内容(而非顺带提及)才加权。
 

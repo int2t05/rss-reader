@@ -1,4 +1,4 @@
-"""Webhook 发布:飞书/钉钉/Slack/Discord/自定义,单 webhook 失败不中断其他。
+"""Webhook 发布:飞书/Slack/Discord/自定义,单 webhook 失败不中断其他。
 
 每种 webhook 类型有独立的 payload 格式,统一通过 httpx POST 发布。
 """
@@ -6,8 +6,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Protocol
 
 import httpx
@@ -15,7 +14,7 @@ import httpx
 logger = logging.getLogger(__name__)
 
 
-class WebhookType(str, Enum):
+class WebhookType(StrEnum):
     """Webhook 类型:feishu/slack/discord/custom。"""
 
     FEISHU = "feishu"
@@ -85,7 +84,7 @@ class WebhookPublisher:
 
     示例:
         publisher = WebhookPublisher([{"type": "feishu", "url": "..."}])
-        await publisher.publish(content=md, date=datetime.now())
+        await publisher.publish(content=md)
     """
 
     def __init__(self, configs: list[dict[str, Any]]):
@@ -102,13 +101,13 @@ class WebhookPublisher:
                 continue
             self.webhooks.append(cls(url))
 
-    async def publish(self, content: str, date: datetime) -> list[tuple[bool, str | None]]:
+    async def publish(self, content: str) -> list[tuple[bool, str | None]]:
         """并发向所有 webhook 发布简报,返回 [(success, error), ...]。单 webhook 失败不中断。"""
         import asyncio
 
         async with httpx.AsyncClient(timeout=30.0, trust_env=False) as client:
             results = await asyncio.gather(
-                *(self._publish_one(client, webhook, content, date) for webhook in self.webhooks)
+                *(self._publish_one(client, webhook, content) for webhook in self.webhooks)
             )
         return list(results)
 
@@ -117,7 +116,6 @@ class WebhookPublisher:
         client: httpx.AsyncClient,
         webhook: _Webhook,
         content: str,
-        date: datetime,
     ) -> tuple[bool, str | None]:
         """发布到单个 webhook,失败返回 (False, error_msg)。"""
         payload = webhook.build_payload(content)

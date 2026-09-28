@@ -1,5 +1,5 @@
 """模型层测试:ContentItem / RSSSourceConfig / CategoryConfig / ContentAnalysis。"""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from src.models import (
     CategoryConfig,
@@ -20,7 +20,7 @@ def test_content_item_minimal():
         url="https://example.com/post",
         content="正文",
         author="作者",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
     )
     assert item.category is None
     assert item.metadata == {}
@@ -36,7 +36,7 @@ def test_content_item_with_category_hint_and_metadata():
         url="https://example.com/post",
         content="正文",
         author="作者",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
         category="ai-research/ai-vendor",
         metadata={"feed_name": "Anthropic", "tags": ["llm", "safety"]},
     )

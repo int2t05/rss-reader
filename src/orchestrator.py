@@ -245,7 +245,6 @@ async def run_select_only(
     err_console.print(f"[bold]Selecting from {len(items)} classified items...[/bold]")
     selected = await selector.select(items, use_llm_dedup=True)
 
-    # 按分类分组输出
     grouped: dict[str, list] = {}
     for item in selected:
         path = item.processing.analysis.category_path if item.processing and item.processing.analysis else "unknown"
@@ -369,20 +368,19 @@ async def _publish(cfg: Config, project_dir: Path | None, content: str, date: da
     """发布简报:GitHub Pages + Webhook。date 控制文件名与 front matter 日期。"""
     outputs = cfg.outputs
 
-    # GitHub Pages
+    # GitHub Pages 发布
     if outputs.get("github_pages", False):
         posts_dir = (project_dir or Path.cwd()) / "docs" / "_posts"
         publisher = GitHubPagesPublisher(posts_dir)
         publisher.publish(content=content, date=date)
         err_console.print(f"[green]Published to GitHub Pages: {posts_dir}[/green]")
 
-    # Webhook
+    # Webhook 发布
     webhook_configs = outputs.get("webhook", [])
     if webhook_configs:
         webhook_publisher = WebhookPublisher(webhook_configs)
         results = await webhook_publisher.publish(
             content=content[:2000],  # 截断避免过长
-            date=datetime.now(UTC),
         )
         success_count = sum(1 for s, _ in results if s)
         err_console.print(f"[green]Webhook: {success_count}/{len(results)} succeeded[/green]")

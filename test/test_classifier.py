@@ -3,7 +3,7 @@
 无 API key 时跳过真实 LLM 调用(非 mock)。
 """
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -32,7 +32,7 @@ def _get_test_config() -> AIClientConfig:
 def categories_root(tmp_path: Path) -> Path:
     """构造最小 categories/ 目录:ai-research + systems。"""
     root = tmp_path / "categories"
-    for name, threshold, children in [
+    for name, _threshold, _children in [
         ("ai-research", 7.0, ["ai-vendor", "ai-researcher", "ai-papers"]),
         ("systems", 5.0, ["eng-blog", "framework", "cn-tech"]),
     ]:
@@ -66,7 +66,7 @@ def _make_item(title: str, content: str, category_hint: str | None = None) -> Co
         url="https://example.com/post",
         content=content,
         author="Test Author",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
         category=category_hint,
         metadata={"feed_name": "Test Feed"},
     )

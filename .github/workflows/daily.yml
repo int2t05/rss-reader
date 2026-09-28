@@ -21,8 +21,7 @@ concurrency:
 jobs:
   daily:
     runs-on: ubuntu-latest
-    # Tier1 并发 10 分类 ~1300 条,LLM 慢响应或重试时单轮可达 40+ 分钟;
-    # 不在超时上限制,确保简报产出不被砍(9-22/9-23 即由 30 分钟超时取消)。
+    # 单轮 LLM 分类(慢响应或重试)可达 40+ 分钟,timeout 90 分钟确保简报产出不被截断。
     timeout-minutes: 90
     permissions:
       contents: write  # 用于提交 docs/_posts 与 data/summaries

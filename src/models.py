@@ -1,14 +1,14 @@
-"""数据模型:ContentItem 及其处理结果,贯穿三段式 pipeline。"""
+"""数据模型:ContentItem 及其处理结果,贯穿两段式 pipeline。"""
 
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
 
-class SourceType(str, Enum):
+class SourceType(StrEnum):
     """信息源类型:RSS 为主要类型,API 为未来扩展预留。"""
 
     RSS = "rss"
@@ -57,7 +57,7 @@ class ItemProcessing(BaseModel):
 
 
 class ContentItem(BaseModel):
-    """信息条目:Source 层产出,三段式 pipeline 的核心载体。
+    """信息条目:Source 层产出,两段式 pipeline 的核心载体。
 
     category 字段为源级 category hint(如 "ai-research/ai-vendor"),
     Tier1 可 override,默认沿用。

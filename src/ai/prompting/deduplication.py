@@ -1,7 +1,4 @@
-"""Tier2 主题去重 prompt:按分类分组,让 LLM 判断同组内是否为同一事件,输出聚类 JSON。
-
-借鉴 Horizon merge_topic_duplicates,但按分类分组降低 prompt 大小。
-"""
+"""Tier2 主题去重 prompt:按分类分组,让 LLM 判断同组内是否为同一事件,输出聚类 JSON。"""
 
 from __future__ import annotations
 

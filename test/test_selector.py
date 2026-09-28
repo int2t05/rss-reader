@@ -4,7 +4,7 @@
 """
 import json
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -87,7 +87,7 @@ def _make_item(
         url=url,
         content="内容",
         author="作者",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
         processing=ItemProcessing(
             analysis=ContentAnalysis(
                 category_path=category_path,
@@ -152,9 +152,23 @@ def test_selector_quota_per_category(registry: CategoryRegistry):
     selector = ContentSelector(registry, client=None)  # type: ignore[arg-type]
     items = []
     for i in range(10):
-        items.append(_make_item(f"ai-{i}", f"https://ai.com/{i}", category_path="ai-research/ai-papers", score=8.0 - i * 0.1))
+        items.append(
+            _make_item(
+                f"ai-{i}",
+                f"https://ai.com/{i}",
+                category_path="ai-research/ai-papers",
+                score=8.0 - i * 0.1,
+            )
+        )
     for i in range(10):
-        items.append(_make_item(f"sys-{i}", f"https://sys.com/{i}", category_path="systems/eng-blog", score=9.0 - i * 0.1))
+        items.append(
+            _make_item(
+                f"sys-{i}",
+                f"https://sys.com/{i}",
+                category_path="systems/eng-blog",
+                score=9.0 - i * 0.1,
+            )
+        )
     result = selector._apply_quota(items)
     ai_count = sum(1 for r in result if r.processing.analysis.category_path.startswith("ai-research"))
     sys_count = sum(1 for r in result if r.processing.analysis.category_path.startswith("systems"))
@@ -207,9 +221,15 @@ async def test_selector_topic_dedup_real_llm(registry: CategoryRegistry):
     client = AIClient(cfg)
     selector = ContentSelector(registry, client=client)
     items = [
-        _make_item("a", "https://openai.com/1", title="OpenAI 发布 GPT-5", summary="OpenAI 发布 GPT-5", score=8.0),
-        _make_item("b", "https://techcrunch.com/1", title="OpenAI 的 GPT-5 正式发布", summary="GPT-5 发布报道", score=7.5),
-        _make_item("c", "https://arxiv.com/1", title="新论文:Transformer 架构改进", summary="Transformer 新架构", score=7.0),
+        _make_item(
+            "a", "https://openai.com/1", title="OpenAI 发布 GPT-5", summary="OpenAI 发布 GPT-5", score=8.0
+        ),
+        _make_item(
+            "b", "https://techcrunch.com/1", title="OpenAI 的 GPT-5 正式发布", summary="GPT-5 发布报道", score=7.5
+        ),
+        _make_item(
+            "c", "https://arxiv.com/1", title="新论文:Transformer 架构改进", summary="Transformer 新架构", score=7.0
+        ),
     ]
     result = await selector.select(items, use_llm_dedup=True)
     # a 和 b 是同一事件,应合并为一条;c 独立保留
@@ -228,7 +248,7 @@ def test_selector_no_analysis_items_skipped(registry: CategoryRegistry):
         url="https://example.com/x",
         content="",
         author="",
-        published_at=datetime(2026, 9, 17, tzinfo=timezone.utc),
+        published_at=datetime(2026, 9, 17, tzinfo=UTC),
         processing=None,
     )
     items = [no_analysis, _make_item("b", "https://x.com/2", score=7.0)]

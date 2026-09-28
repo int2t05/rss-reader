@@ -44,10 +44,10 @@ uv run rss-reader
 {
   "ai": {
     "provider": "openai",              // OpenAI 兼容 provider
-    "model": "glm-5.2",                // 默认模型(OPENAI_MODEL 环境变量覆盖)
+    "model": "gpt-4o-mini",            // 默认模型(OPENAI_MODEL 环境变量覆盖)
     "api_key_env": "OPENAI_API_KEY",   // 环境变量名(非 key 本身)
     "base_url": null,                  // 非 OpenAI 时填
-    "analysis_concurrency": 10         // Tier1 并发
+    "analysis_concurrency": 20         // Tier1 并发
   },
   "rsshub_base_url": null,             // 未配置时跳过 RSSHub 路由源
   "categories": {
@@ -61,7 +61,6 @@ uv run rss-reader
   },
   "outputs": {
     "github_pages": true,
-    "email": {"enabled": false},
     "webhook": [
       {"type": "feishu", "url": "https://..."},
       {"type": "slack", "url": "https://..."}

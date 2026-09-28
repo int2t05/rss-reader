@@ -5,13 +5,12 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/uv-4B275F?style=flat-square&logo=uv&logoColor=white)](https://github.com/astral-sh/uv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-passing-brightgreen?style=flat-square)](test/)
 [![LLM](https://img.shields.io/badge/LLM-OpenAI%20compatible-f0daba?style=flat-square&logo=openai&logoColor=black)](docs/TECH.md)
-[![RSS](https://img.shields.io/badge/sources-168%20feeds-f97316?style=flat-square&logo=rss&logoColor=white)](feeds/)
+[![RSS](https://img.shields.io/badge/sources-172%20feeds-f97316?style=flat-square&logo=rss&logoColor=white)](feeds/)
 
 抓取 RSS 源(含自建源 auto-trend、视频源),经两段式 pipeline 产出中文每日简报,发布到 GitHub Pages 与 Webhook。
 
-**特色**:两段式 pipeline(Tier1 分类+打分+摘要 / Tier2 选取+去重)在成本与深度间取得平衡,日 LLM 调用 < 1000 次;DedupStore 跨轮去重(每条目恰好处理一次,无丢弃无重处理)+ 批量主题去重控制 prompt 与时延;7 大类分类树 + 分类感知阈值保证多样性与重点突出;自建源产出 RSS 即可接入,零适配。
+**特色**:两段式 pipeline(Tier1 分类+打分+摘要 / Tier2 选取+去重)在成本与深度间取得平衡,LLM 调用有界(无 Agent 循环);DedupStore 跨轮去重(每条目恰好处理一次,无丢弃无重处理)+ 批量主题去重控制 prompt 与时延;6 大类分类树(另 finance/crypto 预留)+ 分类感知阈值保证多样性与重点突出;自建源产出 RSS 即可接入,零适配。
 
 ## 快速开始
 
@@ -42,7 +41,7 @@ uv run python -m pytest
 
 ```mermaid
 flowchart LR
-    FEEDS[feeds/*.yml<br/>168 源] --> SRC[Source 层<br/>RSSSource 并发抓取]
+    FEEDS[feeds/*.yml<br/>172 源] --> SRC[Source 层<br/>RSSSource 并发抓取]
     SRC --> DEDUP[DedupStore<br/>跨轮去重]
     DEDUP --> T1[Tier 1<br/>分类+打分+摘要 单次 LLM]
     T1 --> T2[Tier 2<br/>选取+去重 批量主题去重]
@@ -51,7 +50,7 @@ flowchart LR
 ```
 
 **两段式 pipeline**:
-- **Tier 1**(队列消费):每源每日消费未处理条目上限 30 条(DedupStore 为消费位点,断点续传),单次 LLM 分类 + 打分 + 摘要,并发 10
+- **Tier 1**(队列消费):每源每日消费未处理条目上限 30 条(DedupStore 为消费位点,断点续传),单次 LLM 分类 + 打分 + 摘要,并发由 `analysis_concurrency` 控制(当前 20)
 - **Tier 2**(零 AI):URL 去重 + 分类感知阈值 + 批量主题去重(分块并发)+ 配额平衡
 
 ## 功能

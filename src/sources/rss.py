@@ -1,7 +1,4 @@
-"""RSS 源抓取器:httpx 抓 feed → feedparser 解析 → 日期过滤 → ContentItem 列表。
-
-借鉴 Horizon src/scrapers/rss.py:日期解析带时区回退,环境变量展开。
-"""
+"""RSS 源抓取器:httpx 抓 feed → feedparser 解析(无日期条目跳过)→ ContentItem 列表,支持 ${VAR} 展开。"""
 
 from __future__ import annotations
 
@@ -9,7 +6,7 @@ import calendar
 import hashlib
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
 import feedparser
@@ -78,10 +75,7 @@ class RSSSource:
         return items
 
     def _parse_date(self, entry: dict) -> datetime | None:
-        """解析发布日期,优先 struct_time,回退 RFC2822,无时区补 UTC。
-
-        借鉴 Horizon:published_parsed → updated_parsed → created_parsed。
-        """
+        """解析发布日期,优先 struct_time,回退 RFC2822,无时区补 UTC;字段回退链 published → updated → created。"""
         for field in ("published", "updated", "created"):
             if field not in entry:
                 continue
@@ -89,14 +83,14 @@ class RSSSource:
                 parsed_field = f"{field}_parsed"
                 if entry.get(parsed_field):
                     return datetime.fromtimestamp(
-                        calendar.timegm(entry[parsed_field]), tz=timezone.utc
+                        calendar.timegm(entry[parsed_field]), tz=UTC
                     )
                 date_str = entry[field]
                 if not isinstance(date_str, str):
                     continue
                 parsed = parsedate_to_datetime(date_str)
                 if parsed.tzinfo is None:
-                    parsed = parsed.replace(tzinfo=timezone.utc)
+                    parsed = parsed.replace(tzinfo=UTC)
                 return parsed
             except Exception:
                 continue

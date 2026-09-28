@@ -1,5 +1,5 @@
 """SQLite 去重状态测试:真实 SQLite 操作,无 mock。"""
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -52,9 +52,9 @@ def test_batch_is_processed(store: DedupStore):
 
 def test_get_processed_at(store: DedupStore):
     """mark_processed 时记录 fetched_at 时间戳,get_processed_at 返回 datetime。"""
-    before = datetime.now(timezone.utc)
+    before = datetime.now(UTC)
     store.mark_processed("rss_with_ts")
-    after = datetime.now(timezone.utc)
+    after = datetime.now(UTC)
 
     ts = store.get_processed_at("rss_with_ts")
     assert ts is not None

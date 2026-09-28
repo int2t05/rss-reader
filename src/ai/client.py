@@ -1,8 +1,4 @@
-"""AIClient:OpenAI 兼容 LLM 客户端,支持 OpenAI/Claude/Gemini/DeepSeek/Doubao/MiniMax/Ollama 等。
-
-借鉴 Horizon src/ai/client.py:通过 api_key_env + base_url 适配多 provider,
-所有 OpenAI 兼容端点共用 /v1/chat/completions 接口。
-"""
+"""AIClient:OpenAI 兼容 LLM 客户端,api_key_env + base_url 适配多 provider,统一 /v1/chat/completions。"""
 
 from __future__ import annotations
 
@@ -28,9 +24,7 @@ def _is_retryable(exc: Exception) -> bool:
     """判断是否为可重试的瞬时错误:连接/限流/超时/5xx。"""
     if isinstance(exc, _RETRYABLE):
         return True
-    if isinstance(exc, APIStatusError) and exc.status_code >= 500:
-        return True
-    return False
+    return bool(isinstance(exc, APIStatusError) and exc.status_code >= 500)
 
 
 @dataclass

@@ -55,7 +55,10 @@ def categories_root(tmp_path: Path) -> Path:
     fin_dir = root / "finance"
     fin_dir.mkdir(parents=True)
     (fin_dir / "category.json").write_text(
-        json.dumps({"enabled": False, "display_name": "财经", "threshold": 6.0, "digest_limit": 3, "children": []}, ensure_ascii=False),
+        json.dumps(
+            {"enabled": False, "display_name": "财经", "threshold": 6.0, "digest_limit": 3, "children": []},
+            ensure_ascii=False,
+        ),
         encoding="utf-8",
     )
 

@@ -1,8 +1,7 @@
-"""Webhook 发布测试:飞书/钉钉/Slack/Discord/自定义。
+"""Webhook 发布测试:飞书/Slack/Discord/自定义。
 
 真实 HTTP 调用用 httpbin.org 验证,Webhook 构造用纯逻辑测试(非 mock)。
 """
-from datetime import datetime, timezone
 
 import pytest
 
@@ -85,10 +84,7 @@ async def test_webhook_publisher_real_post_to_httpbin():
     """
     configs = [{"type": "custom", "url": "https://httpbin.org/post"}]
     publisher = WebhookPublisher(configs)
-    results = await publisher.publish(
-        content="测试简报内容",
-        date=datetime(2026, 9, 17, tzinfo=timezone.utc),
-    )
+    results = await publisher.publish(content="测试简报内容")
     assert len(results) == 1
     success, error = results[0]
     if not success and error and "ConnectError" in error:
@@ -101,10 +97,7 @@ async def test_webhook_publisher_invalid_url_returns_error():
     """无效 URL 返回错误状态,不抛异常(单 webhook 失败不中断)。"""
     configs = [{"type": "custom", "url": "https://this-domain-does-not-exist.invalid/hook"}]
     publisher = WebhookPublisher(configs)
-    results = await publisher.publish(
-        content="测试",
-        date=datetime(2026, 9, 17, tzinfo=timezone.utc),
-    )
+    results = await publisher.publish(content="测试")
     assert len(results) == 1
     success, error = results[0]
     assert not success
@@ -122,7 +115,7 @@ def test_webhook_publisher_multiple_webhooks_all_attempted():
     import asyncio
 
     results = asyncio.run(
-        publisher.publish(content="测试", date=datetime(2026, 9, 17, tzinfo=timezone.utc))
+        publisher.publish(content="测试")
     )
     assert len(results) == 2
     # 两个都失败

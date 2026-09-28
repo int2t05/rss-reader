@@ -33,7 +33,6 @@ def dedup_by_url(items: list[ContentItem]) -> list[ContentItem]:
         if existing is None:
             by_url[norm] = item
             continue
-        # 比较 score,保留高分
         existing_score = _item_score(existing)
         new_score = _item_score(item)
         if new_score > existing_score:

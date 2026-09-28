@@ -16,13 +16,13 @@ flowchart TB
     MARK --> DONE([Pipeline complete])
 ```
 
-**数据流**:输入无 → 输出 `data/summaries/YYYY-MM-DD.md` + `docs/_posts/YYYY-MM-DD.md` + webhook 推送 + `dedup.db` 新增 item_id 记录。
+**数据流**:输入无 → 输出 `data/summaries/YYYY-MM-DD.md` + `docs/_posts/YYYY-MM-DD-daily-briefing.md` + webhook 推送 + `dedup.db` 新增 item_id 记录。
 
 ## Tier 1:分类 + 打分 + 摘要
 
 ```mermaid
 flowchart LR
-    ITEMS[list[ContentItem]<br/>~500-1000] --> BATCH[classify_batch<br/>Semaphore 并发 10]
+    ITEMS[list[ContentItem]<br/>~500-1000] --> BATCH[classify_batch<br/>Semaphore 并发 20]
     BATCH --> LOOP{每条 item}
     LOOP --> HINT[源级 category hint]
     HINT --> PROMPT[构建 system + user prompt]
