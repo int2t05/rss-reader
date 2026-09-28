@@ -34,3 +34,7 @@
   new MutationObserver(apply).observe(document.documentElement, { childList: true, subtree: true });
 })();
 </script>
+<!-- 简报页阅读工具(仅简报 URL 装配,其余页面零开销) -->
+{% if page.url contains 'daily-briefing' %}
+{% include briefing-tools.html %}
+{% endif %}
