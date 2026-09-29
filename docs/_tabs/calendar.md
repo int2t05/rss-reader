@@ -5,9 +5,9 @@ icon: fas fa-calendar-days
 order: 1
 ---
 
-<!-- 月历浏览全部简报:已读变灰(与简报页共享 localStorage 日期集),复刻自 auto-trend。 -->
+<!-- 月历浏览全部简报:已读变灰(与简报页共享 localStorage 日期集),复刻自 auto-trend。
+     内联脚本不得使用 // 行注释:Chirpy compress 把整个文档压成一行,行注释会吞掉后续代码。 -->
 <script>
-  // 简报日期与 URL 注入(来自 site.posts,url 已含 baseurl)
   window.__briefs = [
     {%- for p in site.posts %}
     { date: '{{ p.date | date: "%Y-%m-%d" }}', url: '{{ p.url | relative_url }}' }{% unless forloop.last %},{% endunless %}
@@ -84,116 +84,4 @@ order: 1
   .cal-mark-all:hover { color: var(--link-color); border-color: var(--link-color); }
 </style>
 
-<script>
-(function () {
-  'use strict';
-
-  var STORE_KEY = 'rss-reader.read-dates'; // 与简报页共享的已读日期集
-  var briefMap = {}; // 日期 → 简报 URL
-  var years = [];
-  (window.__briefs || []).forEach(function (b) {
-    briefMap[b.date] = b.url;
-    var y = b.date.slice(0, 4);
-    if (years.indexOf(y) < 0) years.push(y);
-  });
-  years.sort();
-
-  var grid = document.getElementById('cal-grid');
-  var yearSel = document.getElementById('cal-year');
-  var monthSel = document.getElementById('cal-month');
-
-  // 年份选项从实际简报推导(无简报时回退当前年);月份固定 1-12
-  var cur = new Date();
-  if (!years.length) years.push(String(cur.getFullYear()));
-  years.forEach(function (y) {
-    var opt = document.createElement('option');
-    opt.value = y;
-    opt.textContent = y;
-    yearSel.appendChild(opt);
-  });
-  for (var m = 1; m <= 12; m++) {
-    var opt = document.createElement('option');
-    opt.value = m - 1;
-    opt.textContent = m;
-    monthSel.appendChild(opt);
-  }
-  yearSel.value = +years[0] <= cur.getFullYear() && cur.getFullYear() <= +years[years.length - 1]
-    ? String(cur.getFullYear()) : years[years.length - 1];
-  monthSel.value = cur.getMonth();
-
-  /** 读取已读日期集;存储损坏回退空集。 */
-  function load() {
-    try {
-      var arr = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-      return new Set(Array.isArray(arr) ? arr : []);
-    } catch (e) { return new Set(); }
-  }
-
-  /** 写回已读日期集,失败静默。 */
-  function save(set) {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(Array.from(set))); } catch (e) { /* 静默 */ }
-  }
-
-  function todayStr() {
-    var t = new Date();
-    return t.getFullYear() + '-' + String(t.getMonth() + 1).padStart(2, '0') + '-' + String(t.getDate()).padStart(2, '0');
-  }
-
-  /** 渲染当前年月网格:周一为首,有简报的天为链接,已读变灰,今日描边。 */
-  function render() {
-    var year = +yearSel.value;
-    var month = +monthSel.value;
-    var readSet = load();
-    var today = todayStr();
-    grid.innerHTML = '';
-
-    var startDow = (new Date(year, month, 1).getDay() + 6) % 7; // 周一为首的偏移
-    var daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    for (var i = 0; i < startDow; i++) {
-      var pad = document.createElement('span');
-      pad.className = 'cal-day empty';
-      grid.appendChild(pad);
-    }
-
-    var _loop = function (d) {
-      var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-      var cell = document.createElement(briefMap[dateStr] ? 'a' : 'span');
-      if (briefMap[dateStr]) {
-        cell.href = briefMap[dateStr];
-        cell.className = 'cal-day in-month has-post';
-        if (readSet.has(dateStr)) cell.classList.add('is-read');
-      } else {
-        cell.className = 'cal-day in-month';
-      }
-      cell.textContent = d;
-      if (dateStr === today) cell.classList.add('today');
-      grid.appendChild(cell);
-    };
-    for (var d = 1; d <= daysInMonth; d++) _loop(d);
-  }
-
-  function shiftMonth(delta) {
-    var m = +monthSel.value + delta;
-    if (m < 0) { m = 11; yearSel.value = +yearSel.value - 1; }
-    else if (m > 11) { m = 0; yearSel.value = +yearSel.value + 1; }
-    monthSel.value = m;
-    render();
-  }
-
-  document.getElementById('cal-prev').addEventListener('click', function () { shiftMonth(-1); });
-  document.getElementById('cal-next').addEventListener('click', function () { shiftMonth(1); });
-  yearSel.addEventListener('change', render);
-  monthSel.addEventListener('change', render);
-
-  // 全部标为已读:所有简报日期全量写入已读集
-  document.getElementById('cal-mark-all').addEventListener('click', function () {
-    var set = load();
-    Object.keys(briefMap).forEach(function (date) { set.add(date); });
-    save(set);
-    render();
-  });
-
-  render();
-})();
-</script>
+<script src="{{ '/assets/js/calendar.js' | relative_url }}" defer></script>

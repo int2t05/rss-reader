@@ -30,7 +30,7 @@
   } else {
     apply();
   }
-  // 主题 JS 若重渲染侧栏/topbar,兜底重注入
+  /* 主题 JS 若重渲染侧栏/topbar,兜底重注入 —— 用块注释:Chirpy compress 会把整个文档压成一行,行注释会吞掉后续代码 */
   new MutationObserver(apply).observe(document.documentElement, { childList: true, subtree: true });
 })();
 </script>

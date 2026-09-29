@@ -68,8 +68,10 @@ docs/                    # Chirpy 站点 + 正式文档(见 Formal docs 段)
 ├── Gemfile              # 锁 jekyll-theme-chirpy gem
 ├── _includes/
 │   ├── metadata-hook.html  # 站点级 head 钩子(头像/topbar 注入 + 简报工具装配)
-│   └── briefing-tools.html # 简报页已读标记(日期为键):纯客户端 JS,与日历页共享 localStorage
+│   └── briefing-tools.html # 简报页已读标记(日期为键):内联样式 + 外部脚本装配
 ├── _tabs/               # 导航入口(calendar/archives/categories/tags/about)
+├── assets/
+│   └── js/              # briefing-read.js + calendar.js(阅读工具逻辑,不经 compress)
 ├── _posts/              # 每日简报(Chirpy front matter: date/categories/tags)
 └── index.html / 404.html / robots.txt
 ```
