@@ -1,219 +1,66 @@
-<!-- 简报页阅读工具:已读标记 + 进度 + 只看未读,纯客户端 JS+CSS,零依赖零构建。
-     以条目 URL 为 key 存 localStorage(跨日简报共享),不影响管线与选取逻辑。 -->
+<!-- 简报页已读标记(日期为键):纯客户端 JS,与日历页共享 localStorage 已读日期集。 -->
 <style>
-  /* 工具条:进度 + 过滤/批量操作,配色用 Chirpy 变量随明暗模式自适应 */
-  .brief-toolbar {
-    display: flex; align-items: center; flex-wrap: wrap; gap: .4rem;
-    margin: 0 0 1.5rem; padding: .45rem .7rem;
-    border: 1px solid var(--main-border-color); border-radius: .5rem;
-    font-size: .9rem;
+  /* 已读切换按钮:右对齐置于正文前,配色用 Chirpy 变量随明暗自适应 */
+  .brief-read-row { display: flex; justify-content: flex-end; margin-bottom: .5rem; }
+  .brief-read-btn {
+    font-family: inherit; font-size: .85rem; cursor: pointer;
+    color: var(--link-color); background: var(--card-bg);
+    border: 1px solid var(--main-border-color); border-radius: 980px;
+    padding: .2rem .9rem;
   }
-  .brief-progress { color: var(--text-muted-color); margin-right: auto; }
-  .brief-btn {
-    border: 1px solid var(--main-border-color); background: transparent;
-    color: var(--text-color); border-radius: .3rem;
-    padding: .1rem .55rem; font-size: .85rem; cursor: pointer;
-  }
-  .brief-btn:hover { border-color: var(--bs-primary); color: var(--bs-primary); }
-  .brief-btn[aria-pressed="true"] { background: var(--bs-primary); border-color: var(--bs-primary); color: var(--card-bg); }
-
-  /* h2/h3 内按钮必须空文本、::before 出字形,否则污染 tocbot 按 textContent 构建的 TOC */
-  .brief-toggle, .brief-mark-sec { border: none; background: none; padding: 0; cursor: pointer; line-height: 1; }
-  .brief-toggle::before {
-    content: ""; display: inline-block; width: .8em; height: .8em; margin-right: .35em;
-    border: 1.5px solid var(--text-muted-color); border-radius: .18em;
-    vertical-align: -.06em; font-size: .85em;
-  }
-  .brief-toggle[aria-pressed="true"]::before {
-    content: "✓"; text-align: center; line-height: .9;
-    border-color: var(--bs-primary); color: var(--bs-primary);
-  }
-  .brief-mark-sec::before {
-    content: "✓"; display: inline-block; width: 1em; height: 1em; margin-right: .35em;
-    border-radius: 50%; background: var(--text-muted-color); color: var(--card-bg);
-    text-align: center; line-height: 1; font-size: .8em; vertical-align: -.08em;
-  }
-  .brief-mark-sec:hover::before { background: var(--bs-primary); }
-
-  /* 已读态:变暗不隐藏 */
-  .post-content h3.is-read a { color: var(--text-muted-color); }
-  .post-content .is-read { opacity: .55; }
-
-  /* 只看未读:已读条目隐藏;全读分类连 h2 一并隐藏 */
-  .brief-hide-read .is-read { display: none !important; }
-  .brief-hide-read h2.brief-section-empty { display: none !important; }
+  .brief-read-btn:hover { border-color: var(--link-color); }
+  .brief-read-btn.is-read { color: var(--text-muted-color); background: transparent; }
 </style>
 <script>
 (function () {
   'use strict';
 
-  var STORE_KEY = 'rss-reader.read-urls'; // 已读 URL 全局集(插入序 JSON 数组)
-  var MAX_URLS = 10000; // FIFO 上限(~1MB),旧 URL 不会复现,淘汰最旧安全
-  var PAGE_RE = /\/posts\/\d{4}\/\d{2}\/\d{2}\/daily-briefing\/?$/;
-  var H1_RE = /^每日简报 · \d{4}-\d{2}-\d{2}$/;
+  var STORE_KEY = 'rss-reader.read-dates'; // 已读日期集(YYYY-MM-DD 数组),与日历页共享
+  var PAGE_RE = /\/posts\/(\d{4})\/(\d{2})\/(\d{2})\/daily-briefing\/?$/;
 
-  var state = new Set(); // 已读 URL 内存集
-  var items = [];        // 条目:{ h3, url, followers, btn }
-  var sections = [];     // 分类:{ h2, items }
-  var filterOn = false;  // 只看未读开关
-  var contentEl = null;
-  var filterBtn = null;
-  var progressEl = null;
-
-  /** 读取已读集;损坏数据回退空集,绝不阻断页面。 */
-  function loadSet() {
+  /** 读取已读日期集;存储损坏回退空集,绝不阻断页面。 */
+  function load() {
     try {
       var arr = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
-      if (Array.isArray(arr)) arr.forEach(function (u) { if (typeof u === 'string' && u) state.add(u); });
-    } catch (e) { state.clear(); }
+      return new Set(Array.isArray(arr) ? arr : []);
+    } catch (e) { return new Set(); }
   }
 
-  /** 写回已读集,超出 FIFO 上限时按插入序淘汰最旧。 */
-  function saveSet() {
-    var arr = Array.from(state);
-    if (arr.length > MAX_URLS) {
-      arr = arr.slice(arr.length - MAX_URLS);
-      state = new Set(arr);
-    }
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(arr)); } catch (e) { /* 存储不可用则静默,内存态仍可用 */ }
+  /** 写回已读日期集,失败静默(隐私模式不阻塞交互)。 */
+  function save(set) {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(Array.from(set))); } catch (e) { /* 静默 */ }
   }
 
-  /** 页面判定:URL 正则 + h1 签名双保险,非简报页零注入。 */
-  function isBriefingPage() {
-    var h1 = contentEl.querySelector('h1');
-    return PAGE_RE.test(location.pathname) && !!h1 && H1_RE.test(h1.textContent.trim());
-  }
-
-  /** 遍历 .content:含外链的 h3 即条目,其后兄弟归 followers 直到下一个 h2/h3。 */
-  function collect() {
-    var curSec = null, curItem = null;
-    Array.prototype.forEach.call(contentEl.children, function (el) {
-      var tag = el.tagName;
-      if (tag === 'H2') {
-        curItem = null;
-        curSec = { h2: el, items: [] };
-        sections.push(curSec);
-      } else if (tag === 'H3') {
-        var a = el.querySelector('a[href]');
-        if (!a) { curItem = null; return; }
-        curItem = { h3: el, url: a.href, followers: [], btn: null };
-        items.push(curItem);
-        if (curSec) curSec.items.push(curItem);
-      } else if (curItem) {
-        curItem.followers.push(el);
-      }
-    });
-  }
-
-  function makeBtn(text, cls, onClick) {
-    var b = document.createElement('button');
-    b.type = 'button';
-    b.className = cls;
-    b.textContent = text;
-    b.addEventListener('click', onClick);
-    return b;
-  }
-
-  /** 装配:工具条插为 content 首子,h3 插 toggle,h2 插「本分类全部已读」。 */
-  function mount() {
-    var bar = document.createElement('div');
-    bar.className = 'brief-toolbar';
-    progressEl = document.createElement('span');
-    progressEl.className = 'brief-progress';
-    bar.appendChild(progressEl);
-    filterBtn = makeBtn('只看未读', 'brief-btn brief-filter', toggleFilter);
-    bar.appendChild(filterBtn);
-    bar.appendChild(makeBtn('全部已读', 'brief-btn brief-read-all', function () { markPage(true); }));
-    bar.appendChild(makeBtn('清空当日', 'brief-btn brief-clear', function () { markPage(false); }));
-    contentEl.insertBefore(bar, contentEl.firstChild);
-
-    items.forEach(function (it) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'brief-toggle';
-      btn.addEventListener('click', function () { applyItem(it, !state.has(it.url)); });
-      it.h3.insertBefore(btn, it.h3.firstChild);
-      it.btn = btn;
-    });
-    sections.forEach(function (sec) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'brief-mark-sec';
-      btn.title = '本分类全部已读';
-      btn.setAttribute('aria-label', '本分类全部已读');
-      btn.addEventListener('click', function () { markSection(sec, true); });
-      sec.h2.insertBefore(btn, sec.h2.firstChild);
-    });
-  }
-
-  /** 重绘单条:is-read 类(h3+followers)、按钮态、提示文案。 */
-  function paintItem(it, on) {
-    it.h3.classList.toggle('is-read', on);
-    it.followers.forEach(function (el) { el.classList.toggle('is-read', on); });
-    it.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    it.btn.title = on ? '标记未读' : '标记已读';
-    it.btn.setAttribute('aria-label', it.btn.title);
-  }
-
-  /** 单条切换:更新状态集 + 落盘 + 重绘。 */
-  function applyItem(it, on) {
-    if (on) state.add(it.url); else state.delete(it.url);
-    saveSet();
-    paintItem(it, on);
-    refresh();
-  }
-
-  /** 分类批量标记(只影响本页 URL,不动全局集其他条目)。 */
-  function markSection(sec, on) {
-    sec.items.forEach(function (it) {
-      if (on) state.add(it.url); else state.delete(it.url);
-      paintItem(it, on);
-    });
-    saveSet();
-    refresh();
-  }
-
-  /** 整日标记 / 清空当日。 */
-  function markPage(on) {
-    items.forEach(function (it) {
-      if (on) state.add(it.url); else state.delete(it.url);
-      paintItem(it, on);
-    });
-    saveSet();
-    refresh();
-  }
-
-  function toggleFilter() {
-    filterOn = !filterOn;
-    refresh();
-  }
-
-  /** 重绘进度、过滤开关态,以及「全读分类隐藏」(仅过滤开启时)。 */
-  function refresh() {
-    var read = 0;
-    items.forEach(function (it) { if (state.has(it.url)) read++; });
-    progressEl.textContent = '已读 ' + read + '/' + items.length;
-    filterBtn.setAttribute('aria-pressed', filterOn ? 'true' : 'false');
-    contentEl.classList.toggle('brief-hide-read', filterOn);
-
-    sections.forEach(function (sec) {
-      var allRead = sec.items.length > 0 && sec.items.every(function (it) { return state.has(it.url); });
-      sec.h2.classList.toggle('brief-section-empty', filterOn && allRead);
-    });
-  }
-
-  /** 入口:非简报页或任何异常均零副作用返回。 */
+  /** 装配:简报页正文前插「标记已读」按钮,日期取自 URL。 */
   function init() {
-    try {
-      contentEl = document.querySelector('.content');
-      if (!contentEl || !isBriefingPage()) return;
-      loadSet();
-      collect();
-      if (!items.length) return;
-      mount();
-      items.forEach(function (it) { paintItem(it, state.has(it.url)); });
-      refresh();
-    } catch (e) { /* 阅读工具失败不影响正文阅读 */ }
+    var m = PAGE_RE.exec(location.pathname);
+    var content = document.querySelector('.content');
+    var h1 = content && content.querySelector('h1');
+    // URL 正则 + h1 签名双保险,非简报页零注入
+    if (!m || !h1 || !/^每日简报 · \d{4}-\d{2}-\d{2}$/.test(h1.textContent.trim())) return;
+
+    var date = m[1] + '-' + m[2] + '-' + m[3];
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'brief-read-btn';
+    btn.addEventListener('click', function () {
+      var set = load();
+      if (set.has(date)) { set.delete(date); } else { set.add(date); }
+      save(set);
+      paint(set.has(date));
+    });
+
+    var row = document.createElement('div');
+    row.className = 'brief-read-row';
+    row.appendChild(btn);
+    content.insertBefore(row, content.firstChild);
+
+    function paint(isRead) {
+      btn.textContent = isRead ? '已读 ✓' : '标记已读';
+      btn.classList.toggle('is-read', isRead);
+    }
+    paint(load().has(date));
   }
 
   if (document.readyState === 'loading') {

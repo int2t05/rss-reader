@@ -68,8 +68,8 @@ docs/                    # Chirpy 站点 + 正式文档(见 Formal docs 段)
 ├── Gemfile              # 锁 jekyll-theme-chirpy gem
 ├── _includes/
 │   ├── metadata-hook.html  # 站点级 head 钩子(头像/topbar 注入 + 简报工具装配)
-│   └── briefing-tools.html # 简报页已读标记:纯客户端 JS+CSS,localStorage 存 URL 集
-├── _tabs/               # 导航入口(archives/categories/tags/about)
+│   └── briefing-tools.html # 简报页已读标记(日期为键):纯客户端 JS,与日历页共享 localStorage
+├── _tabs/               # 导航入口(calendar/archives/categories/tags/about)
 ├── _posts/              # 每日简报(Chirpy front matter: date/categories/tags)
 └── index.html / 404.html / robots.txt
 ```
@@ -171,7 +171,7 @@ class RSSSource:
 - Never delete or narrow reserved categories (`finance`, `crypto`) — they are module placeholders.
 - Never auto-commit / auto-push. Report status + diff, wait for instruction.
 - Never enable RSSHub sources without `rsshub_base_url` configured. RSSHub-prefixed URLs (`/solidot`) are silently skipped when `rsshub_base_url` is null.
-- Never add a web server / API service / interactive frontend. This is a batch job — fetch, analyze, publish, exit. Static, dependency-free, display-only client JS in `docs/_includes/` (published-site reading enhancements such as the briefing read-state marks) is part of the site and allowed; it must never touch the pipeline or selection logic.
+- Never add a web server / API service / interactive frontend. This is a batch job — fetch, analyze, publish, exit. Static, dependency-free, display-only client JS in `docs/_includes/` and `docs/_tabs/` (published-site reading enhancements such as the briefing read-state marks and the calendar) is part of the site and allowed; it must never touch the pipeline or selection logic.
 
 ## Formal docs
 

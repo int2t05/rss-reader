@@ -154,9 +154,14 @@ class SummaryStore:
     def load(self, date: datetime) -> str | None
 ```
 
-### 站点阅读工具(`docs/_includes/`)
+### 站点阅读工具(`docs/_includes/` + `docs/_tabs/calendar.md`)
 
-`metadata-hook.html` 以 Liquid 守卫(`page.url contains 'daily-briefing'`)仅在简报页装配 `briefing-tools.html` —— 纯客户端 JS+CSS IIFE,零依赖零构建。DOM 结构约定:`.content` 下 `h2` 为分类、含外链 `a[href]` 的 `h3` 为条目、后随兄弟为详情;注入按钮空文本、CSS `::before` 出字形,避免污染 tocbot 按 textContent 构建的 TOC。功能:单条已读切换 / 分类与整日批量标记 / 只看未读(全读分类连 h2 隐藏)/ 进度 `已读 N/M`。已读状态以条目 URL 为 key 存 `localStorage`(键 `rss-reader.read-urls`,插入序 JSON 数组,FIFO 上限 10000),跨日简报共享,换浏览器不同步。纯显示层,不影响管线与选取逻辑。
+已读状态以**日期为键**(借鉴 auto-trend):localStorage 单键 `rss-reader.read-dates`(YYYY-MM-DD 集合),简报页与日历页共享,零依赖零构建,零 Python 改动。
+
+- **简报页**(`briefing-tools.html`,经 metadata-hook Liquid 守卫装配):正文前一个「标记已读」按钮,日期取自 URL 正则,h1 签名双保险,非简报页零注入。
+- **日历页**(`_tabs/calendar.md`,Chirpy tab):Liquid 注入全部简报 `{date, url}`(来自 `site.posts`),月历网格(周一为首、今日描边),有简报的天为链接、已读变灰,支持翻月与「全部标为已读」;年份范围由实际简报推导。
+
+纯显示层,不影响管线与选取逻辑。
 
 ## 数据流
 
@@ -192,7 +197,7 @@ sequenceDiagram
 | 每日总结 | Markdown | `data/summaries/YYYY-MM-DD.md` |
 | GitHub Pages | Jekyll(Chirpy) | `docs/_posts/YYYY-MM-DD-daily-briefing.md` |
 | 去重状态 | SQLite(WAL) | `data/dedup.db` |
-| 读者已读状态 | localStorage(JSON 数组,FIFO 上限 10000) | 浏览器本地,键 `rss-reader.read-urls` |
+| 读者已读状态 | localStorage(日期集合) | 浏览器本地,键 `rss-reader.read-dates` |
 | 主配置 | JSON | `data/config.json` |
 | 源配置 | YAML | `feeds/*.yml`(6 文件,172 源) |
 | 分类配置 | JSON | `categories/*/category.json` |
