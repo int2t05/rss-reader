@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
+from urllib.parse import quote, urlsplit
 
 from src.models import ContentItem
 
@@ -23,17 +24,35 @@ _LABELS = {
 }
 
 
-def _escape_link_text(text: str) -> str:
-    """转义 Markdown 链接文本中的 ] 与 )，避免破坏 [text](url) 语法。
+def _plain_markdown_text(text: str) -> str:
+    """把外部标题与模型摘要作为纯文本写入 Markdown，不接受 HTML 或嵌套链接。"""
+    text = " ".join(text.split())
+    return (
+        text.replace("\\", "\\\\")
+        .replace("[", r"\[")
+        .replace("]", r"\]")
+        .replace("(", r"\(")
+        .replace(")", r"\)")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
 
-    示例:"GPT-5 (发布)" → "GPT-5 \\(发布\\)"
-    """
-    return text.replace("]", "\\]").replace(")", "\\)")
+
+def _escape_link_text(text: str) -> str:
+    """转义链接标签中的 Markdown 分隔符，同时保留标题的可见文本。"""
+    return _plain_markdown_text(text)
 
 
 def _escape_link_url(url: str) -> str:
-    """转义 Markdown 链接 URL 中的 ) 与空白，避免破坏 [text](url) 语法。"""
-    return url.replace(")", "\\)")
+    """只接受绝对 HTTP(S) 链接，并编码 Markdown URL 分隔符。"""
+    url = url.strip()
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return "#"
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.netloc:
+        return "#"
+    return quote(url, safe=":/?#[]@!$&'*,;=%+~")
 
 
 def render_markdown(items: list[ContentItem], date: datetime) -> str:
@@ -69,7 +88,7 @@ def render_markdown(items: list[ContentItem], date: datetime) -> str:
 
     for cat in sorted(grouped.keys()):
         cat_items = grouped[cat]
-        lines.append(f"## {cat}")
+        lines.append(f"## {_plain_markdown_text(cat)}")
         lines.append("")
 
         for item in cat_items:
@@ -92,7 +111,8 @@ def _render_item(lines: list[str], item: ContentItem) -> None:
 
     summary = analysis.summary if analysis else None
     if summary:
-        lines.append(f"- **{_LABELS['summary']}**: {summary}")
+        lines.append(f"- **{_LABELS['summary']}**: {_plain_markdown_text(summary)}")
 
     if analysis and analysis.tags:
-        lines.append(f"- **{_LABELS['tags']}: {', '.join(analysis.tags)}**")
+        tags = ", ".join(_plain_markdown_text(tag) for tag in analysis.tags)
+        lines.append(f"- **{_LABELS['tags']}: {tags}**")

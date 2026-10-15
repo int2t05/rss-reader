@@ -18,13 +18,14 @@ def _make_item(
     score: float = 8.0,
     category_path: str = "ai-research/ai-papers",
     summary: str = "一句话摘要",
+    url: str = "https://example.com/post",
 ) -> ContentItem:
     """构造带 Tier1 analysis 的测试 ContentItem。"""
     return ContentItem(
         id="rss_test_abc",
         source_type=SourceType.RSS,
         title=title,
-        url="https://example.com/post",
+        url=url,
         content="内容",
         author="作者",
         published_at=datetime(2026, 9, 17, tzinfo=UTC),
@@ -119,5 +120,24 @@ def test_render_markdown_escapes_link_special_chars():
     items = [_make_item(title="GPT-5 (多模态) 发布 [更新]")]
     md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
     assert "GPT-5" in md
-    assert "(多模态\\)" in md
-    assert "[更新\\]" in md
+    assert "\\(多模态\\)" in md
+    assert "\\[更新\\]" in md
+
+
+def test_render_markdown_escapes_untrusted_html_and_nested_links():
+    """RSS/LLM 文本不能注入原始 HTML 或危险 Markdown 链接。"""
+    items = [_make_item(summary="<script>alert(1)</script> [点击](javascript:alert(1))")]
+    md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
+
+    assert "&lt;script&gt;" in md
+    assert "[点击]" not in md
+    assert "](javascript:" not in md.lower()
+
+
+def test_render_markdown_rejects_non_http_item_urls():
+    """外部 feed URL 不是 HTTP(S) 时不生成可执行链接。"""
+    items = [_make_item(url="javascript:alert(1)")]
+    md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
+
+    assert "(javascript:" not in md.lower()
+    assert "(https://example.com/post)" not in md

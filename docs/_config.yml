@@ -33,6 +33,8 @@ theme: jekyll-theme-chirpy
 permalink: /posts/:year/:month/:day/:title/
 
 # Markdown 渲染
+# Keep the Pages-supported Kramdown GFM renderer. Generated post fields are escaped by src/render/markdown.py;
+# manually authored Chirpy tabs may use trusted HTML.
 markdown: kramdown
 kramdown:
   input: GFM
