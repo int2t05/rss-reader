@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import UTC, datetime
 
 from rich.console import Console
 from rich.progress import (
@@ -48,13 +49,15 @@ class ContentClassifier:
         self.categories = categories
         self.console = console or Console(stderr=True)
 
-    async def classify_and_score(self, item: ContentItem) -> None:
+    async def classify_and_score(self, item: ContentItem, now: datetime | None = None) -> None:
         """单次 LLM 调用分类+打分,失败时一次修复重试(temperature=0)。
 
+        now 为时效打分的时间基准(回填模式传回填日期),默认当前 UTC 时间。
         最终失败时写入默认 analysis(score=0.0),不抛异常。
         注意:classify_and_score 自身不捕获 LLM 异常,仅在 classify_batch 中被 try/except 包裹;
         直接调用时需自行处理网络/API 异常。
         """
+        now = now or datetime.now(UTC)
         category_tree = self.categories.category_tree_json()
         system_prompt = analysis_system_prompt(category_tree)
         user_prompt = analysis_user_prompt(
@@ -62,6 +65,8 @@ class ContentClassifier:
             content=item.content,
             feed_name=item.metadata.get("feed_name", "Unknown"),
             category_hint=item.category,
+            published_at=item.published_at,
+            now=now,
             max_chars=_DEFAULT_ANALYSIS_MAX_CHARS,
         )
 
@@ -119,9 +124,10 @@ class ContentClassifier:
             logger.warning("Analysis parse error: %s", e)
             return None
 
-    async def classify_batch(self, items: list[ContentItem]) -> list[ContentItem]:
+    async def classify_batch(self, items: list[ContentItem], now: datetime | None = None) -> list[ContentItem]:
         """并发分类批量 item,并发度由 AIClientConfig.analysis_concurrency 控制。
 
+        now 为时效打分的时间基准,默认当前 UTC 时间。
         单条失败不影响其他条目,失败条目写入默认 analysis。
         """
         concurrency = max(self.client.config.analysis_concurrency, 1)
@@ -130,7 +136,7 @@ class ContentClassifier:
         async def _process(item: ContentItem, progress_task) -> ContentItem:
             async with semaphore:
                 try:
-                    await self.classify_and_score(item)
+                    await self.classify_and_score(item, now=now)
                 except Exception as e:
                     logger.error("Error classifying item %s: %s", item.id, e)
                     if item.processing is None:

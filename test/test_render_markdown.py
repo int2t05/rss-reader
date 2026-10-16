@@ -70,6 +70,14 @@ def test_render_markdown_contains_score():
     assert "8.5" in md
 
 
+def test_render_markdown_contains_item_date():
+    """每条目显示发布日期(月-日),供读者核查时效。"""
+    items = [_make_item()]
+    md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
+    assert "发布" in md
+    assert "09-17" in md
+
+
 def test_render_markdown_contains_summary():
     """每条目摘要出现在简报中。"""
     items = [_make_item(summary="一句话技术摘要")]

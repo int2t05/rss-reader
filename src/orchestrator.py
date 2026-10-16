@@ -237,7 +237,7 @@ async def run_select_only(
     client = _build_ai_client(cfg)
     registry = _build_category_registry(cfg, project_dir)
     classifier = ContentClassifier(client, registry)
-    selector = ContentSelector(registry, client=client)
+    selector = ContentSelector(registry, client=client, max_age_days=cfg.freshness.get("max_age_days", 7))
 
     err_console.print(f"[bold]Classifying {len(items)} items...[/bold]")
     items = await classifier.classify_batch(items)
@@ -303,15 +303,18 @@ async def run_pipeline(
     client = _build_ai_client(cfg)
     registry = _build_category_registry(cfg, project_dir)
     classifier = ContentClassifier(client, registry)
-    selector = ContentSelector(registry, client=client)
+    selector = ContentSelector(registry, client=client, max_age_days=cfg.freshness.get("max_age_days", 7))
+
+    # 时效基准:回填模式用回填日期,正常运行用当前 UTC 时间
+    now = date or datetime.now(UTC)
 
     # Tier 1: 分类 + 打分 + 摘要
     err_console.print(f"[bold]Tier 1: Classifying {len(items)} items...[/bold]")
-    items = await classifier.classify_batch(items)
+    items = await classifier.classify_batch(items, now=now)
 
     # Tier 2: 选取 + 去重
     err_console.print(f"[bold]Tier 2: Selecting from {len(items)} items...[/bold]")
-    selected = await selector.select(items, use_llm_dedup=True)
+    selected = await selector.select(items, use_llm_dedup=True, now=now)
     err_console.print(f"[bold]Tier 2 selected {len(selected)} items.[/bold]")
 
     if not selected:
@@ -320,8 +323,7 @@ async def run_pipeline(
         err_console.print("[yellow]No items selected after Tier 2.[/yellow]")
         return 0
 
-    # 渲染中文日报(date 为回填日期,否则当前时间)
-    now = date or datetime.now(UTC)
+    # 渲染中文日报(now 已含回填日期语义)
     err_console.print("[bold]Rendering daily briefing...[/bold]")
     content = render_markdown(selected, date=now)
 

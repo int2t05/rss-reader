@@ -28,7 +28,7 @@ flowchart TB
     end
 
     subgraph Tier2
-        SEL[ContentSelector<br/>URL去重→阈值→批量主题去重→配额]
+        SEL[ContentSelector<br/>URL去重→时效→阈值→批量主题去重→配额]
     end
 
     subgraph 输出
@@ -87,6 +87,7 @@ class Config:
     outputs: dict
     rsshub_base_url: str | None
     data_dir: Path
+    freshness: dict          # 时效设置(max_age_days)
 
 def load_config(project_dir: Path | None = None, config_path: str | None = None) -> Config
 ```
@@ -107,20 +108,21 @@ OpenAI 兼容,`tenacity` 重试 429/5xx/超时(3 次指数退避,4xx 不重试)�
 
 ```python
 class ContentClassifier:
-    async def classify_and_score(self, item: ContentItem) -> None  # 原地填 analysis
-    async def classify_batch(self, items: list[ContentItem]) -> list[ContentItem]  # 并发(analysis_concurrency)
+    async def classify_and_score(self, item: ContentItem, now: datetime | None = None) -> None  # 原地填 analysis
+    async def classify_batch(self, items: list[ContentItem], now: datetime | None = None) -> list[ContentItem]  # 并发(analysis_concurrency)
 ```
 
-单次 LLM 合并分类+打分+摘要,JSON 修复重试一次(temperature=0)。
+单次 LLM 合并分类+打分+摘要,JSON 修复重试一次(temperature=0)。user prompt 注入发布时间(含距今天数),system prompt 携带时效降分规则(≤1 天不降 / 2-3 天轻度 / >3 天显著;研究相关条目豁免),`now` 为时效基准(回填模式传回填日期)。
 
 ### Tier 2(`src/ai/selector.py`)
 
 ```python
 class ContentSelector:
-    async def select(self, items, use_llm_dedup=True) -> list[ContentItem]
+    def __init__(self, categories, client=None, max_age_days=7)
+    async def select(self, items, use_llm_dedup=True, now: datetime | None = None) -> list[ContentItem]
 ```
 
-四步:`dedup_by_url` → `_filter_by_threshold` → `_topic_dedup`(按父分类分块 30/批并发)→ `_apply_quota`。
+五步:`dedup_by_url` → `_filter_by_age`(距今超过 `max_age_days` 直接丢弃,`freshness.max_age_days` 配置)→ `_filter_by_threshold` → `_topic_dedup`(按父分类分块 30/批并发)→ `_apply_quota`。
 
 ### 渲染(`src/render/markdown.py`)
 
@@ -128,7 +130,7 @@ class ContentSelector:
 def render_markdown(items: list[ContentItem], date: datetime) -> str
 ```
 
-按父分类分节,每条目含 title(链接)/ score / summary / tags。title/url 转义 Markdown 特殊字符。
+按父分类分节,每条目含 title(链接)/ date(发布日期)/ score / summary / tags。title/url 转义 Markdown 特殊字符。
 
 ### 发布(`src/publish/`)
 
@@ -179,10 +181,10 @@ sequenceDiagram
     S-->>M: 每源未处理前 30 条,合并
     M->>D: batch_unprocessed(item_ids)
     D-->>M: 过滤已处理
-    M->>T1: classify_batch(items)
-    T1-->>M: items 带 analysis
-    M->>T2: select(items, use_llm_dedup=True)
-    T2->>T2: URL去重→阈值→主题去重→配额
+    M->>T1: classify_batch(items, now)
+    T1-->>M: items 带 analysis(prompt 注入发布时间,时效降分)
+    M->>T2: select(items, use_llm_dedup=True, now)
+    T2->>T2: URL去重→时效硬截止→阈值→主题去重→配额
     T2-->>M: 30-50 精选
     M->>R: render_markdown(selected)
     R-->>M: 中文 Markdown

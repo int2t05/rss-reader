@@ -50,6 +50,9 @@ uv run rss-reader
     "analysis_concurrency": 20         // Tier1 并发
   },
   "rsshub_base_url": null,             // 未配置时跳过 RSSHub 路由源
+  "freshness": {
+    "max_age_days": 7                  // Tier2 时效硬截止:超过 N 天的条目直接丢弃
+  },
   "categories": {
     "<cat-name>": {
       "enabled": true,

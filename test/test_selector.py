@@ -1,10 +1,11 @@
-"""ContentSelector 测试:Tier2 选取器,阈值过滤 + 主题去重 + 配额平衡。
+"""ContentSelector 测试:Tier2 选取器,时效硬截止 + 阈值过滤 + 主题去重 + 配额平衡。
 
-阈值过滤与配额平衡是纯逻辑,无 LLM;主题去重用真实 LLM。
+时效过滤、阈值过滤与配额平衡是纯逻辑,无 LLM;主题去重用真实 LLM。
 """
+import asyncio
 import json
 import os
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -78,8 +79,9 @@ def _make_item(
     category_path: str = "ai-research/ai-papers",
     score: float = 7.0,
     summary: str = "摘要",
+    published_at: datetime | None = None,
 ) -> ContentItem:
-    """构造带 analysis 的测试 ContentItem。"""
+    """构造带 analysis 的测试 ContentItem(默认发布时间为当前,通过时效过滤)。"""
     return ContentItem(
         id=item_id,
         source_type=SourceType.RSS,
@@ -87,7 +89,7 @@ def _make_item(
         url=url,
         content="内容",
         author="作者",
-        published_at=datetime(2026, 9, 17, tzinfo=UTC),
+        published_at=published_at or datetime.now(UTC),
         processing=ItemProcessing(
             analysis=ContentAnalysis(
                 category_path=category_path,
@@ -97,6 +99,31 @@ def _make_item(
             )
         ),
     )
+
+
+def test_selector_age_filter_drops_stale(registry: CategoryRegistry):
+    """时效硬截止:超过 max_age_days 的条目被丢弃,边界内保留。"""
+    selector = ContentSelector(registry, client=None, max_age_days=7)  # type: ignore[arg-type]
+    now = datetime(2026, 10, 16, tzinfo=UTC)
+    items = [
+        _make_item("fresh", "https://x.com/1", published_at=datetime(2026, 10, 15, tzinfo=UTC)),  # 1 天前
+        _make_item("boundary", "https://x.com/2", published_at=datetime(2026, 10, 9, tzinfo=UTC)),  # 恰 7 天
+        _make_item("stale", "https://x.com/3", published_at=datetime(2026, 10, 8, tzinfo=UTC)),  # 8 天前
+    ]
+    result = selector._filter_by_age(items, now)
+    assert [r.id for r in result] == ["fresh", "boundary"]
+
+
+def test_selector_select_drops_stale_items(registry: CategoryRegistry):
+    """select 流程包含时效过滤:旧条目即使高分也不进入简报。"""
+    now = datetime.now(UTC)
+    selector = ContentSelector(registry, client=None)  # type: ignore[arg-type]
+    items = [
+        _make_item("stale", "https://x.com/1", score=9.0, published_at=now - timedelta(days=10)),
+        _make_item("fresh", "https://x.com/2", score=7.0),
+    ]
+    result = asyncio.run(selector.select(items, use_llm_dedup=False, now=now))
+    assert [r.id for r in result] == ["fresh"]
 
 
 def test_selector_filters_below_threshold(registry: CategoryRegistry):
@@ -178,8 +205,6 @@ def test_selector_quota_per_category(registry: CategoryRegistry):
 
 def test_selector_url_dedup_in_select(registry: CategoryRegistry):
     """select 流程包含 URL 去重:同 URL 不同追踪参数合并。"""
-    import asyncio
-
     selector = ContentSelector(registry, client=None)  # type: ignore[arg-type]
     items = [
         _make_item("a", "https://example.com/post?utm_source=x", score=7.0),

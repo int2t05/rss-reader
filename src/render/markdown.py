@@ -1,4 +1,4 @@
-"""Markdown 简报渲染:按分类组织,每条目含 Tier1 字段(title/score/summary/tags)。
+"""Markdown 简报渲染:按分类组织,每条目含 Tier1 字段(title/date/score/summary/tags)。
 
 渲染顺序:日期标题 → 统计 → 按分类分节 → 每分类下条目列表。
 """
@@ -16,6 +16,7 @@ _LABELS = {
     "title": "每日简报",
     "stats": "统计",
     "items": "条目",
+    "date": "发布",
     "score": "分数",
     "summary": "摘要",
     "tags": "标签",
@@ -99,7 +100,7 @@ def render_markdown(items: list[ContentItem], date: datetime) -> str:
 
 
 def _render_item(lines: list[str], item: ContentItem) -> None:
-    """渲染单条目:标题 + 分数 + 摘要 + 标签。"""
+    """渲染单条目:标题 + 发布日期 + 分数 + 摘要 + 标签(日期供读者核查时效)。"""
     analysis = item.processing.analysis if item.processing and item.processing.analysis else None
 
     title = item.title or "Untitled"
@@ -107,6 +108,7 @@ def _render_item(lines: list[str], item: ContentItem) -> None:
     score_str = f"{analysis.score:.1f}" if analysis and analysis.score is not None else "-"
     lines.append(f"### [{_escape_link_text(title)}]({_escape_link_url(url)})")
     lines.append("")
+    lines.append(f"- **{_LABELS['date']}**: {item.published_at:%m-%d}")
     lines.append(f"- **{_LABELS['score']}**: {score_str}")
 
     summary = analysis.summary if analysis else None

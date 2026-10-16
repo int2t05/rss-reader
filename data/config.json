@@ -7,6 +7,9 @@
     "analysis_concurrency": 20
   },
   "rsshub_base_url": null,
+  "freshness": {
+    "max_age_days": 7
+  },
   "categories": {
     "ai-research": {
       "enabled": true,

@@ -1,16 +1,18 @@
-"""ContentSelector:Tier2 选取器,纯程序逻辑(URL 去重 + 阈值过滤 + 配额平衡)+ 可选主题去重。
+"""ContentSelector:Tier2 选取器,纯程序逻辑(URL 去重 + 时效硬截止 + 阈值过滤 + 配额平衡)+ 可选主题去重。
 
-四步流程:
+五步流程:
 1. 跨源 URL 去重(规范化 URL 合并,保留高分)
-2. 分类感知阈值过滤(每分类独立 threshold)
-3. 主题去重(可选,按父分类分组,LLM 判断同事件)
-4. 分类配额平衡(每分类 digest_limit,按分数降序截取)
+2. 时效硬截止(超过 max_age_days 的陈旧条目直接丢弃)
+3. 分类感知阈值过滤(每分类独立 threshold)
+4. 主题去重(可选,按父分类分组,LLM 判断同事件)
+5. 分类配额平衡(每分类 digest_limit,按分数降序截取)
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
+from datetime import UTC, datetime
 
 from src.ai.client import AIClient
 from src.ai.prompting.deduplication import (
@@ -35,7 +37,7 @@ def _item_brief(it: ContentItem) -> str:
 
 
 class ContentSelector:
-    """Tier2 选取器:URL 去重 → 阈值过滤 → 主题去重 → 配额平衡。
+    """Tier2 选取器:URL 去重 → 时效硬截止 → 阈值过滤 → 主题去重 → 配额平衡。
 
     示例:
         selector = ContentSelector(registry, client=ai_client)
@@ -43,40 +45,59 @@ class ContentSelector:
         # selected 为 30-50 条精选条目,按分类分组、分数降序
     """
 
-    def __init__(self, categories: CategoryRegistry, client: AIClient | None = None):
-        """指定分类注册表与 AI 客户端(主题去重时必需,纯逻辑步骤可传 None)。"""
+    def __init__(
+        self,
+        categories: CategoryRegistry,
+        client: AIClient | None = None,
+        max_age_days: int = 7,
+    ):
+        """指定分类注册表与 AI 客户端(主题去重时必需,纯逻辑步骤可传 None);max_age_days 为时效硬截止天数。"""
         self.categories = categories
         self.client = client
+        self.max_age_days = max_age_days
 
     async def select(
         self,
         items: list[ContentItem],
         use_llm_dedup: bool = True,
+        now: datetime | None = None,
     ) -> list[ContentItem]:
-        """四步选取流程:URL 去重 → 阈值过滤 → 主题去重(可选)→ 配额平衡。
+        """五步选取流程:URL 去重 → 时效硬截止 → 阈值过滤 → 主题去重(可选)→ 配额平衡。
 
+        now 为时效基准(回填模式传回填日期),默认当前 UTC 时间。
         use_llm_dedup=False 时跳过 LLM 主题去重,仅纯程序逻辑(用于测试/低成本场景)。
         """
+        now = now or datetime.now(UTC)
+
         # 1. 跨源 URL 去重
         before = len(items)
         items = dedup_by_url(items)
         logger.info("Tier2 URL 去重:%d → %d", before, len(items))
 
-        # 2. 分类感知阈值过滤
+        # 2. 时效硬截止
+        before = len(items)
+        items = self._filter_by_age(items, now)
+        logger.info("Tier2 时效过滤(>%d 天):%d → %d", self.max_age_days, before, len(items))
+
+        # 3. 分类感知阈值过滤
         before = len(items)
         items = self._filter_by_threshold(items)
         logger.info("Tier2 阈值过滤:%d → %d", before, len(items))
 
-        # 3. 主题去重(可选,需 LLM)
+        # 4. 主题去重(可选,需 LLM)
         if use_llm_dedup and self.client is not None and len(items) > 1:
             before = len(items)
             items = await self._topic_dedup(items)
             logger.info("Tier2 主题去重:%d → %d", before, len(items))
 
-        # 4. 分类配额平衡
+        # 5. 分类配额平衡
         items = self._apply_quota(items)
         logger.info("Tier2 配额平衡后:%d 条", len(items))
         return items
+
+    def _filter_by_age(self, items: list[ContentItem], now: datetime) -> list[ContentItem]:
+        """时效硬截止:距今超过 max_age_days 的陈旧条目直接丢弃,保证「今日」简报不含旧闻。"""
+        return [it for it in items if max((now - it.published_at).days, 0) <= self.max_age_days]
 
     def _filter_by_threshold(self, items: list[ContentItem]) -> list[ContentItem]:
         """分类感知阈值过滤:每分类独立 threshold,低于阈值的丢弃。

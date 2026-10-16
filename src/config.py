@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class Config:
-    """运行时配置聚合:AI 设置、分类树、源列表、输出渠道。"""
+    """运行时配置聚合:AI 设置、分类树、源列表、输出渠道、时效设置。"""
 
     def __init__(
         self,
@@ -27,6 +27,7 @@ class Config:
         outputs: dict,
         rsshub_base_url: str | None,
         data_dir: Path,
+        freshness: dict | None = None,
     ):
         self.ai = ai
         self.categories = categories  # config.json 原始 dict
@@ -35,6 +36,7 @@ class Config:
         self.outputs = outputs
         self.rsshub_base_url = rsshub_base_url
         self.data_dir = data_dir
+        self.freshness = freshness or {}  # 时效设置:max_age_days 等
 
 
 def _load_category_configs(categories_root: Path, raw_categories: dict) -> list[CategoryConfig]:
@@ -106,4 +108,5 @@ def load_config(project_dir: Path | None = None, config_path: str | None = None)
         outputs=raw.get("outputs", {}),
         rsshub_base_url=expand_env(raw.get("rsshub_base_url")) if raw.get("rsshub_base_url") else None,
         data_dir=data_dir,
+        freshness=raw.get("freshness", {}),
     )

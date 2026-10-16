@@ -25,7 +25,7 @@ flowchart LR
     ITEMS[list[ContentItem]<br/>~500-1000] --> BATCH[classify_batch<br/>Semaphore 并发 20]
     BATCH --> LOOP{每条 item}
     LOOP --> HINT[源级 category hint]
-    HINT --> PROMPT[构建 system + user prompt]
+    HINT --> PROMPT[构建 system + user prompt<br/>user prompt 注入发布时间(距今天数)]
     PROMPT --> LLM1[LLM complete<br/>temperature=0.7]
     LLM1 --> PARSE[parse_json_response]
     PARSE -->|失败| RETRY[修复重试<br/>temperature=0]
@@ -38,24 +38,26 @@ flowchart LR
     NEXT -->|完成| OUT[带 analysis 的 items]
 ```
 
-**数据流**:输入 `list[ContentItem]`(无 analysis),输出同列表(items 原地修改,`processing.analysis` 填充)。单条失败写入默认 analysis(score=0.0),不中断。
+**数据流**:输入 `list[ContentItem]`(无 analysis),输出同列表(items 原地修改,`processing.analysis` 填充)。user prompt 注入发布时间与距今天数,system prompt 按时效降分(研究相关豁免);单条失败写入默认 analysis(score=0.0),不中断。
 
 ## Tier 2:选取 + 去重
 
 ```mermaid
 flowchart TB
     IN[带 analysis 的 items] --> D1[dedup_by_url<br/>URL 规范化 + 保留高分]
-    D1 --> D2[_filter_by_threshold<br/>分类感知阈值]
-    D2 --> D3[_topic_dedup<br/>按父分类分块 30/批并发]
-    D3 --> D4[_apply_quota<br/>分类配额 + 分数降序]
-    D4 --> OUT[30-50 精选 items]
+    D1 --> D2[_filter_by_age<br/>时效硬截止 max_age_days=7]
+    D2 --> D3[_filter_by_threshold<br/>分类感知阈值]
+    D3 --> D4[_topic_dedup<br/>按父分类分块 30/批并发]
+    D4 --> D5[_apply_quota<br/>分类配额 + 分数降序]
+    D5 --> OUT[30-50 精选 items]
 ```
 
 **数据流**:
 1. `normalize_url` 去 fragment/追踪参数/统一 https/小写 host,同 URL 保留分数最高
-2. 每分类独立 threshold(ai-research 7.0 / tech-news 4.0),低于阈值丢弃
-3. 按父分类前缀分组,大组分块(30/批)`asyncio.gather` 并发,每批一次 LLM 调用判断同事件,保留高分
-4. 每分类 `digest_limit` 截取,按分数降序
+2. 时效硬截止:距今超过 `max_age_days`(config `freshness.max_age_days`,默认 7)的条目直接丢弃,回填模式以回填日期为基准
+3. 每分类独立 threshold(ai-research 7.0 / tech-news 4.0),低于阈值丢弃
+4. 按父分类前缀分组,大组分块(30/批)`asyncio.gather` 并发,每批一次 LLM 调用判断同事件,保留高分
+5. 每分类 `digest_limit` 截取,按分数降序
 
 输入 `list[ContentItem]`(带 analysis),输出 30-50 条精选。
 
@@ -71,7 +73,7 @@ flowchart LR
     HOOK -->|否| SKIP[跳过]
 ```
 
-**数据流**:`render_markdown` 按父分类分节,每条目含 title(链接)/ score / summary / tags。`GitHubPagesPublisher` 写 Chirpy front matter(date 带时区 +0800、categories `[简报]`、tags 从正文 `## 分类` 节提取全小写)。
+**数据流**:`render_markdown` 按父分类分节,每条目含 title(链接)/ date(发布日期)/ score / summary / tags。`GitHubPagesPublisher` 写 Chirpy front matter(date 带时区 +0800、categories `[简报]`、tags 从正文 `## 分类` 节提取全小写)。
 
 ## 分类配置加载
 

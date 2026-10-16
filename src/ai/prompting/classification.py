@@ -1,6 +1,8 @@
-"""Tier1 分类+打分 prompt 构建:system prompt 注入分类树 + 评分标准,user prompt 注入条目内容。"""
+"""Tier1 分类+打分 prompt 构建:system prompt 注入分类树 + 评分标准(含时效规则),user prompt 注入条目内容与发布时间。"""
 
 from __future__ import annotations
+
+from datetime import datetime
 
 _DEFAULT_MAX_CHARS = 1000
 
@@ -23,7 +25,15 @@ def analysis_system_prompt(category_tree_json: str) -> str:
 - 3-4:  低价值 / 营销 / 重复
 - 0-2:  无关 / 垃圾
 
-## 研究兴趣加权(优先级高于基础评分)
+## 时效性(结合 user prompt 中的发布时间打分)
+简报是「今日」视角,同等内容越新价值越高:
+- 距今 ≤1 天:不降分
+- 距今 2-3 天:轻度降分(约 -1)
+- 距今 >3 天:显著降分,一般性内容应低于 4 分
+- 重大发布 / 重要研究可放宽,但仍应随条目年龄递减
+例外:命中研究兴趣加权的条目豁免时效降分。
+
+## 研究兴趣加权(优先级高于基础评分与时效降分)
 用户重点研究方向为进化计算与分布式优化。条目命中以下任一主题时,分数显著上调
 (至少 +2,通常进 8-10 段),并在 summary 开头标注「研究相关:」:
 - 进化计算/群智算法:进化计算、遗传算法、粒子群 PSO、蚁群 ACO、差分进化、进化策略、演化计算、群体智能、swarm
@@ -58,15 +68,19 @@ def analysis_user_prompt(
     content: str,
     feed_name: str,
     category_hint: str | None,
+    published_at: datetime,
+    now: datetime,
     max_chars: int = _DEFAULT_MAX_CHARS,
 ) -> str:
-    """构建 Tier1 user prompt:条目标题 + 内容截取 + 源信息。
+    """构建 Tier1 user prompt:条目标题 + 内容截取 + 源信息 + 发布时间(含距今天数,供时效打分)。
 
     content 超过 max_chars 时截取前 max_chars 字符。
     """
     truncated = content[:max_chars] if content else ""
     hint_line = f"类别提示:{category_hint}" if category_hint else "类别提示:(无,AI 自主分类)"
+    age_days = max((now - published_at).days, 0)
     return f"""标题:{title}
 内容:{truncated}
 来源:{feed_name}
+发布时间:{published_at:%Y-%m-%d}(距今 {age_days} 天)
 {hint_line}"""

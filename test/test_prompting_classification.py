@@ -1,7 +1,9 @@
 """Tier1 分类+打分 prompt 构建测试:system + user prompt 模板。
 
-纯逻辑测试,验证 prompt 结构与变量注入。
+纯逻辑测试,验证 prompt 结构与变量注入(含时效规则与发布时间)。
 """
+from datetime import UTC, datetime
+
 import pytest
 
 from src.ai.prompting.classification import (
@@ -52,6 +54,14 @@ def test_system_prompt_includes_category_hint_rule(category_tree_json: str):
     assert "override" in prompt.lower() or "hint" in prompt.lower() or "源" in prompt
 
 
+def test_system_prompt_includes_freshness_rule(category_tree_json: str):
+    """system prompt 含时效降分规则与研究相关豁免。"""
+    prompt = analysis_system_prompt(category_tree_json)
+    assert "时效性" in prompt
+    assert "距今" in prompt
+    assert "豁免" in prompt
+
+
 def test_user_prompt_contains_title():
     """user prompt 包含条目标题。"""
     prompt = analysis_user_prompt(
@@ -59,6 +69,8 @@ def test_user_prompt_contains_title():
         content="OpenAI 发布 GPT-5,支持多模态推理",
         feed_name="OpenAI News",
         category_hint="ai-research/ai-vendor",
+        published_at=datetime(2026, 10, 16, tzinfo=UTC),
+        now=datetime(2026, 10, 16, tzinfo=UTC),
     )
     assert "GPT-5 发布" in prompt
 
@@ -71,6 +83,8 @@ def test_user_prompt_contains_content():
         content=long_content,
         feed_name="Feed",
         category_hint="ai-research/ai-papers",
+        published_at=datetime(2026, 10, 16, tzinfo=UTC),
+        now=datetime(2026, 10, 16, tzinfo=UTC),
         max_chars=500,
     )
     assert "技术细节" in prompt
@@ -84,6 +98,8 @@ def test_user_prompt_contains_category_hint():
         content="内容",
         feed_name="Anthropic",
         category_hint="ai-research/ai-vendor",
+        published_at=datetime(2026, 10, 16, tzinfo=UTC),
+        now=datetime(2026, 10, 16, tzinfo=UTC),
     )
     assert "ai-research/ai-vendor" in prompt
     assert "Anthropic" in prompt
@@ -96,6 +112,8 @@ def test_user_prompt_handles_none_category_hint():
         content="内容",
         feed_name="Unknown",
         category_hint=None,
+        published_at=datetime(2026, 10, 16, tzinfo=UTC),
+        now=datetime(2026, 10, 16, tzinfo=UTC),
     )
     assert "测试" in prompt
     assert "Unknown" in prompt
@@ -108,5 +126,34 @@ def test_user_prompt_handles_empty_content():
         content="",
         feed_name="Feed",
         category_hint=None,
+        published_at=datetime(2026, 10, 16, tzinfo=UTC),
+        now=datetime(2026, 10, 16, tzinfo=UTC),
     )
     assert "空内容" in prompt
+
+
+def test_user_prompt_contains_published_date_and_age():
+    """user prompt 含发布日期与距今天数,供时效打分。"""
+    prompt = analysis_user_prompt(
+        title="测试",
+        content="内容",
+        feed_name="Feed",
+        category_hint=None,
+        published_at=datetime(2026, 10, 13, tzinfo=UTC),
+        now=datetime(2026, 10, 16, tzinfo=UTC),
+    )
+    assert "2026-10-13" in prompt
+    assert "距今 3 天" in prompt
+
+
+def test_user_prompt_future_date_clamps_age_to_zero():
+    """发布时间在未来(异常 feed)时距今天数钳制为 0,不出现负数。"""
+    prompt = analysis_user_prompt(
+        title="测试",
+        content="内容",
+        feed_name="Feed",
+        category_hint=None,
+        published_at=datetime(2026, 10, 20, tzinfo=UTC),
+        now=datetime(2026, 10, 16, tzinfo=UTC),
+    )
+    assert "距今 0 天" in prompt
