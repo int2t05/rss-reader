@@ -56,13 +56,15 @@ def _escape_link_url(url: str) -> str:
     return quote(url, safe=":/?#[]@!$&'*,;=%+~")
 
 
-def render_markdown(items: list[ContentItem], date: datetime) -> str:
+def render_markdown(items: list[ContentItem], date: datetime, period: str | None = None) -> str:
     """渲染 Markdown 简报:按分类分节,每条目含 title/score/summary/深层字段。
+
+    period 非空时标题用它(区间合刊,如 "2026-10-24 ~ 2026-11-02"),否则用单日日期。
 
     示例:
         md = render_markdown(items, date=datetime.now())
     """
-    date_str = date.strftime("%Y-%m-%d")
+    date_str = period or date.strftime("%Y-%m-%d")
 
     lines: list[str] = []
     lines.append(f"# {_LABELS['title']} · {date_str}")

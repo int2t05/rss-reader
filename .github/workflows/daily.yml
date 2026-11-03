@@ -12,6 +12,10 @@ on:
         description: "Backfill date YYYY-MM-DD (empty = today)"
         required: false
         default: ""
+      until:
+        description: "Backfill range end YYYY-MM-DD (with date: ONE merged briefing for the period)"
+        required: false
+        default: ""
 
 # 单一并发,避免并发跑覆盖 Pages 提交
 concurrency:
@@ -51,11 +55,15 @@ jobs:
           FLUXSIFT_FEED_URL: ${{ secrets.FLUXSIFT_FEED_URL }}
         run: |
           BACKFILL="${{ github.event.inputs.date }}"
+          UNTIL="${{ github.event.inputs.until }}"
+          ARGS=""
           if [ -n "$BACKFILL" ]; then
-            uv run rss-reader --log-level INFO --date "$BACKFILL"
-          else
-            uv run rss-reader --log-level INFO
+            ARGS="$ARGS --date $BACKFILL"
           fi
+          if [ -n "$UNTIL" ]; then
+            ARGS="$ARGS --until $UNTIL"
+          fi
+          uv run rss-reader --log-level INFO $ARGS
 
       - name: Commit and push briefing
         run: |
@@ -66,7 +74,12 @@ jobs:
             echo "No changes to commit"
           else
             BACKFILL="${{ github.event.inputs.date }}"
-            MSG_DATE="${BACKFILL:-$(date -u +%Y-%m-%d)}"
+            UNTIL="${{ github.event.inputs.until }}"
+            if [ -n "$BACKFILL" ] && [ -n "$UNTIL" ]; then
+              MSG_DATE="${BACKFILL}..${UNTIL}"
+            else
+              MSG_DATE="${BACKFILL:-$(date -u +%Y-%m-%d)}"
+            fi
             git commit -m "docs(daily): $MSG_DATE briefing"
             # 运行期间可能有新 push,rebase 后再推,避免 fast-forward 拒绝
             git pull --rebase origin main

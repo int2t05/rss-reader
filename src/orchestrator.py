@@ -275,6 +275,7 @@ async def run_pipeline(
     limit: int | None,
     config_path: str | None = None,
     date: datetime | None = None,
+    until: datetime | None = None,
 ) -> int:
     """完整 pipeline:消费队列 → Tier1 分类+打分+摘要 → Tier2 选取+去重 → 渲染日报 → 落盘 + 发布。
 
@@ -282,12 +283,17 @@ async def run_pipeline(
     超限条目下次运行继续。--no-publish 跳过发布,仅落盘到 data/summaries/。
     date 非 None 时进入回填模式:用指定日期命名输出,跳过 dedup 过滤与标记
     (处理当前 feed 全部条目,不推进消费位点,避免抢走正常运行的条目)。
+    date 与 until 同给时为区间回填:渲染一篇区间合刊——时效基准取区间终点,
+    Tier2 时效硬截止放宽到覆盖整个区间,产出文件名沿用终点日期。
     """
     try:
         cfg = load_config(project_dir, config_path)
     except FileNotFoundError as e:
         err_console.print(f"[red]Config error:[/red] {e}")
         return 1
+
+    # 区间合刊的标题串(单日回填与正常运行都是 None,标题走单日日期)
+    period = f"{date:%Y-%m-%d} ~ {until:%Y-%m-%d}" if until is not None else None
 
     # 回填模式不过滤 dedup,正常模式过滤已消费条目
     dedup_store = None if date is not None else _dedup_store(project_dir)
@@ -303,10 +309,14 @@ async def run_pipeline(
     client = _build_ai_client(cfg)
     registry = _build_category_registry(cfg, project_dir)
     classifier = ContentClassifier(client, registry)
-    selector = ContentSelector(registry, client=client, max_age_days=cfg.freshness.get("max_age_days", 7))
+    # 时效硬截止:区间回填放宽到覆盖整个区间,否则区间早段的条目会被 7 天窗口误杀
+    max_age_days = cfg.freshness.get("max_age_days", 7)
+    if until is not None and date is not None:
+        max_age_days = max(max_age_days, (until - date).days + 1)
+    selector = ContentSelector(registry, client=client, max_age_days=max_age_days)
 
-    # 时效基准:回填模式用回填日期,正常运行用当前 UTC 时间
-    now = date or datetime.now(UTC)
+    # 时效基准:区间回填用区间终点,单日回填用回填日期,正常运行用当前 UTC 时间
+    now = until or date or datetime.now(UTC)
 
     # Tier 1: 分类 + 打分 + 摘要
     err_console.print(f"[bold]Tier 1: Classifying {len(items)} items...[/bold]")
@@ -323,9 +333,9 @@ async def run_pipeline(
         err_console.print("[yellow]No items selected after Tier 2.[/yellow]")
         return 0
 
-    # 渲染中文日报(now 已含回填日期语义)
+    # 渲染中文日报(now 已含回填日期语义;区间回填标题走合刊串)
     err_console.print("[bold]Rendering daily briefing...[/bold]")
-    content = render_markdown(selected, date=now)
+    content = render_markdown(selected, date=now, period=period)
 
     # 落盘
     summaries_dir = (project_dir or Path.cwd()) / "data" / "summaries"

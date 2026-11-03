@@ -73,6 +73,12 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Backfill: produce briefing for YYYY-MM-DD (skip dedup, skip mark-processed)",
     )
+    parser.add_argument(
+        "--until",
+        type=str,
+        default=None,
+        help="Backfill range end YYYY-MM-DD; with --date renders ONE merged briefing for the period",
+    )
     parser.add_argument("--limit", type=int, default=None, help="Limit items processed (for --classify-only)")
     return parser
 
@@ -109,7 +115,14 @@ def main(argv: list[str] | None = None) -> int:
 
     # 默认:完整 pipeline
     date = _parse_date(args.date)
-    return asyncio.run(run_pipeline(project_dir, args.no_publish, args.limit, args.config, date=date))
+    until = _parse_date(args.until)
+    if until is not None and date is None:
+        parser.error("--until requires --date (range backfill needs both ends)")
+    if until is not None and until < date:
+        parser.error("--until must not be earlier than --date")
+    return asyncio.run(
+        run_pipeline(project_dir, args.no_publish, args.limit, args.config, date=date, until=until)
+    )
 
 
 def _parse_date(s: str | None):

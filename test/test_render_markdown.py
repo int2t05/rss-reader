@@ -49,6 +49,18 @@ def test_render_markdown_contains_date():
     assert "09" in md or "9" in md
 
 
+def test_render_markdown_period_overrides_title_date():
+    """区间回填:标题用合刊区间串,不再重复单日日期。"""
+    md = render_markdown(
+        [_make_item()],
+        date=datetime(2026, 11, 2, tzinfo=UTC),
+        period="2026-10-24 ~ 2026-11-02",
+    )
+    first = md.lstrip().splitlines()[0]
+    assert "2026-10-24 ~ 2026-11-02" in first
+    assert "· 2026-11-02" not in first
+
+
 def test_render_markdown_contains_category_section():
     """按分类分节:分类路径作为标题。"""
     items = [_make_item(category_path="ai-research/ai-papers")]

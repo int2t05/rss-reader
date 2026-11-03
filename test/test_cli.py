@@ -155,7 +155,7 @@ def test_main_default_dispatches_to_pipeline(monkeypatch: pytest.MonkeyPatch, tm
 
     called: dict = {}
 
-    async def fake_run(project_dir, no_publish, limit, config_path=None, date=None):
+    async def fake_run(project_dir, no_publish, limit, config_path=None, date=None, until=None):
         called["args"] = (project_dir, no_publish, limit)
         return 0
 
@@ -172,7 +172,7 @@ def test_main_default_no_publish_false(monkeypatch: pytest.MonkeyPatch, tmp_path
 
     called: dict = {}
 
-    async def fake_run(project_dir, no_publish, limit, config_path=None, date=None):
+    async def fake_run(project_dir, no_publish, limit, config_path=None, date=None, until=None):
         called["args"] = (project_dir, no_publish, limit)
         return 0
 
