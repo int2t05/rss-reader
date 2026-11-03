@@ -5,7 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/uv-4B275F?style=flat-square&logo=uv&logoColor=white)](https://github.com/astral-sh/uv)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
-[![LLM](https://img.shields.io/badge/LLM-OpenAI%20compatible-f0daba?style=flat-square&logo=openai&logoColor=black)](docs/TECH.md)
+[![LLM](https://img.shields.io/badge/LLM-Anthropic%20protocol-f0daba?style=flat-square&logo=anthropic&logoColor=black)](docs/TECH.md)
 [![RSS](https://img.shields.io/badge/sources-172%20feeds-f97316?style=flat-square&logo=rss&logoColor=white)](feeds/)
 
 抓取 RSS 源(含自建源 auto-trend、视频源),经两段式 pipeline 产出中文每日简报,发布到 GitHub Pages 与 Webhook。

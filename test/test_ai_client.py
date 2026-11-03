@@ -1,4 +1,4 @@
-"""AIClient 测试:客户端构造 + 真实 LLM 调用(用 Claude Code 兼容 API 凭证)。
+"""AIClient 测试:客户端构造 + 真实 LLM 调用(用 Anthropic 协议网关凭证)。
 
 .env 加载 OPENAI_API_KEY / OPENAI_BASE_URL / OPENAI_MODEL,真实调用 GLM via Volcengine。
 """
@@ -15,7 +15,7 @@ def _get_test_config() -> AIClientConfig:
     if not api_key:
         pytest.skip("OPENAI_API_KEY not set in .env — skipping real LLM call (not mocked)")
     return AIClientConfig(
-        provider="openai",
+        provider="anthropic",
         model=os.environ.get("OPENAI_MODEL", "gpt-4o-mini"),
         api_key_env="OPENAI_API_KEY",
         base_url=os.environ.get("OPENAI_BASE_URL"),
@@ -25,11 +25,11 @@ def _get_test_config() -> AIClientConfig:
 def test_client_config_defaults():
     """AIClientConfig 默认值:analysis_concurrency=5。"""
     cfg = AIClientConfig(
-        provider="openai",
+        provider="anthropic",
         model="gpt-4o-mini",
         api_key_env="OPENAI_API_KEY",
     )
-    assert cfg.provider == "openai"
+    assert cfg.provider == "anthropic"
     assert cfg.model == "gpt-4o-mini"
     assert cfg.analysis_concurrency == 5
     assert cfg.base_url is None
@@ -49,7 +49,7 @@ def test_client_config_with_base_url():
 def test_client_init_reads_api_key_from_env(monkeypatch: pytest.MonkeyPatch):
     """AIClient 从 api_key_env 指定的环境变量读取 key。"""
     monkeypatch.setenv("TEST_API_KEY", "sk-test-123")
-    cfg = AIClientConfig(provider="openai", model="gpt-4o-mini", api_key_env="TEST_API_KEY")
+    cfg = AIClientConfig(provider="anthropic", model="gpt-4o-mini", api_key_env="TEST_API_KEY")
     client = AIClient(cfg)
     assert client.api_key == "sk-test-123"
 
@@ -57,7 +57,7 @@ def test_client_init_reads_api_key_from_env(monkeypatch: pytest.MonkeyPatch):
 def test_client_init_missing_key_raises(monkeypatch: pytest.MonkeyPatch):
     """环境变量未设置时,构造 AIClient 抛 ValueError。"""
     monkeypatch.delenv("MISSING_KEY", raising=False)
-    cfg = AIClientConfig(provider="openai", model="gpt-4o-mini", api_key_env="MISSING_KEY")
+    cfg = AIClientConfig(provider="anthropic", model="gpt-4o-mini", api_key_env="MISSING_KEY")
     with pytest.raises(ValueError, match="MISSING_KEY"):
         AIClient(cfg)
 

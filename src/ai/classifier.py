@@ -74,8 +74,8 @@ class ContentClassifier:
         result = self._parse_analysis(response)
 
         if result is None:
-            # 修复重试:temperature=0 + 修复提示
-            logger.warning("First parse failed for %s, retrying with temperature=0", item.id)
+            # 修复重试:附加修复提示,要求仅输出 JSON
+            logger.warning("First parse failed for %s, retrying with repair prompt", item.id)
             repair_response = await self.client.complete(
                 system=system_prompt,
                 user=(
@@ -83,7 +83,6 @@ class ContentClassifier:
                     + "\n\n你上次的响应不是合法 JSON。请仅输出 JSON 对象,包含 "
                     'category/score/summary/tags 字段。'
                 ),
-                temperature=0,
             )
             result = self._parse_analysis(repair_response)
 

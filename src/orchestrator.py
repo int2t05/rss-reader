@@ -92,7 +92,7 @@ def _build_ai_client(cfg: Config) -> AIClient:
     model = os.environ.get("OPENAI_MODEL", ai_cfg.get("model", "gpt-4o-mini"))
     base_url = ai_cfg.get("base_url") or os.environ.get("OPENAI_BASE_URL")
     client_cfg = AIClientConfig(
-        provider=ai_cfg.get("provider", "openai"),
+        provider=ai_cfg.get("provider", "anthropic"),
         model=model,
         api_key_env=ai_cfg.get("api_key_env", "OPENAI_API_KEY"),
         base_url=base_url,

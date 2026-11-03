@@ -2,11 +2,11 @@
 
 ## 技术栈
 
-Python 3.12+ · uv · httpx · feedparser · pydantic v2 · openai SDK · tenacity · rich · PyYAML · python-dotenv · sqlite3
+Python 3.12+ · uv · httpx · feedparser · pydantic v2 · anthropic SDK · tenacity · rich · PyYAML · python-dotenv · sqlite3
 
 前端:Jekyll + Chirpy 主题(GitHub Actions 构建)
 
-LLM:OpenAI 兼容端点(本项目用 GLM via 火山方舟,与 Claude Code 同凭证机制:`.env` 配 `OPENAI_API_KEY`/`OPENAI_BASE_URL`/`OPENAI_MODEL`)
+LLM:Anthropic Messages 协议端点(本项目用 GLM via 火山 API 网关,与 Claude Code 同凭证机制:`.env` 配 `OPENAI_API_KEY`/`OPENAI_BASE_URL`/`OPENAI_MODEL`)
 
 ## 系统架构
 
@@ -98,11 +98,11 @@ def load_config(project_dir: Path | None = None, config_path: str | None = None)
 
 ```python
 class AIClient:
-    def __init__(self, config: AIClientConfig)  # AsyncOpenAI, timeout=60s
-    async def complete(self, system: str, user: str, *, temperature=0.7, max_tokens=None) -> str
+    def __init__(self, config: AIClientConfig)  # AsyncAnthropic(auth_token Bearer), timeout=60s
+    async def complete(self, system: str, user: str, *, max_tokens=None) -> str
 ```
 
-OpenAI 兼容,`tenacity` 重试 429/5xx/超时(3 次指数退避,4xx 不重试)。
+Anthropic Messages 协议(`/v1/messages`,Bearer 认证,正文取 text block),`tenacity` 重试 429/5xx/超时(3 次指数退避,4xx 不重试)。
 
 ### Tier 1(`src/ai/classifier.py`)
 

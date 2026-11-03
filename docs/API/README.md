@@ -43,10 +43,10 @@ uv run rss-reader
 ```jsonc
 {
   "ai": {
-    "provider": "openai",              // OpenAI 兼容 provider
+    "provider": "anthropic",           // Anthropic Messages 协议网关
     "model": "gpt-4o-mini",            // 默认模型(OPENAI_MODEL 环境变量覆盖)
     "api_key_env": "OPENAI_API_KEY",   // 环境变量名(非 key 本身)
-    "base_url": null,                  // 非 OpenAI 时填
+    "base_url": null,                  // 自定义端点时填(不带 /v1,SDK 自拼 /v1/messages)
     "analysis_concurrency": 20         // Tier1 并发
   },
   "rsshub_base_url": null,             // 未配置时跳过 RSSHub 路由源
@@ -149,7 +149,7 @@ class CategoryConfig:
 | 变量 | 必填 | 说明 |
 |---|---|---|
 | `OPENAI_API_KEY` | 是 | LLM API key |
-| `OPENAI_BASE_URL` | 否 | 非 OpenAI provider 端点(火山方舟等) |
+| `OPENAI_BASE_URL` | 否 | 自定义网关端点(不带 `/v1`,SDK 自拼 `/v1/messages`) |
 | `OPENAI_MODEL` | 否 | 覆盖 config 中的 model |
 | `RSSHUB_BASE_URL` | 否 | RSSHub 实例 URL |
 | `FLUXSIFT_FEED_URL` | 否 | FluxSift 自建视频源 RSS 地址(含 token,经 cpolar 隧道) |
@@ -165,12 +165,12 @@ class CategoryConfig:
 
 ## LLM 配置(与 Claude Code 同凭证机制)
 
-本项目用 OpenAI 兼容端点,通过 `.env` 配置(与 Claude Code 读取 `.env` 的机制一致):
+本项目用 Anthropic Messages 协议端点,通过 `.env` 配置(与 Claude Code 读取 `.env` 的机制一致):
 
 ```bash
 # .env
 OPENAI_API_KEY=sk-xxx                    # 火山方舟 API key
-OPENAI_BASE_URL=https://...apigateway.../compatible  # OpenAI 兼容端点
+OPENAI_BASE_URL=https://...apigateway.../compatible  # Anthropic 协议网关(带不带 /v1 均可,代码自动规整)
 OPENAI_MODEL=glm-5.2                     # 模型名(覆盖 config.json 默认 gpt-4o-mini)
 ```
 

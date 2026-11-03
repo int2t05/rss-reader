@@ -166,7 +166,7 @@ class ContentSelector:
 
         # LLM 调用已由 tenacity 重试 3 次,此处兜底:耗尽重试后保留全部条目,不崩管线
         try:
-            response = await self.client.complete(system=system_prompt, user=user_prompt, temperature=0)
+            response = await self.client.complete(system=system_prompt, user=user_prompt)
         except Exception as e:
             logger.warning("Topic dedup LLM call failed for %s, keeping all items: %s", parent_cat, e)
             return [[item] for item in items]

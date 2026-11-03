@@ -86,8 +86,8 @@ def main(argv: list[str] | None = None) -> int:
         level=getattr(logging, args.log_level),
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
-    # 静音 httpx/openai 每请求 INFO 日志,保留 WARNING+,避免淹没管线进度日志
-    for noisy in ("httpx", "httpx2", "httpcore", "openai._base_client"):
+    # 静音 httpx/anthropic 每请求 INFO 日志,保留 WARNING+,避免淹没管线进度日志
+    for noisy in ("httpx", "httpx2", "httpcore", "anthropic._base_client"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
     # 加载 .env(若存在),复用 Claude Code 凭证或用户自有 key

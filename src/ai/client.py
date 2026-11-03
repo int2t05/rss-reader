@@ -1,4 +1,4 @@
-"""AIClient:OpenAI 兼容 LLM 客户端,api_key_env + base_url 适配多 provider,统一 /v1/chat/completions。"""
+"""AIClient:Anthropic Messages 协议 LLM 客户端,api_key_env + base_url 适配多 provider,统一 /v1/messages。"""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import logging
 import os
 from dataclasses import dataclass
 
-from openai import APIConnectionError, APIStatusError, AsyncOpenAI, RateLimitError
+from anthropic import APIConnectionError, APIStatusError, AsyncAnthropic, RateLimitError
 from tenacity import (
     AsyncRetrying,
     retry_if_exception,
@@ -18,6 +18,9 @@ logger = logging.getLogger(__name__)
 
 # 可重试的瞬时异常:连接/限流/5xx(4xx 认证/参数错误不重试)
 _RETRYABLE = (APIConnectionError, RateLimitError, TimeoutError)
+
+# Anthropic 协议必填 max_tokens;分类/摘要的输出含 reasoning 计入,8192 富余
+_DEFAULT_MAX_TOKENS = 8_192
 
 
 def _is_retryable(exc: Exception) -> bool:
@@ -32,7 +35,7 @@ class AIClientConfig:
     """AI 客户端配置:provider + model + api_key_env + base_url + 并发参数。
 
     示例:
-        cfg = AIClientConfig(provider="openai", model="gpt-4o-mini", api_key_env="OPENAI_API_KEY")
+        cfg = AIClientConfig(provider="anthropic", model="glm-5.3-flash", api_key_env="OPENAI_API_KEY")
     """
 
     provider: str
@@ -42,15 +45,27 @@ class AIClientConfig:
     analysis_concurrency: int = 5
 
 
-class AIClient:
-    """OpenAI 兼容 LLM 客户端:complete() 调用 /v1/chat/completions 返回文本。
+def _normalize_base_url(base_url: str) -> str:
+    """规整 base_url:anthropic SDK 自行拼 /v1/messages,配置里的 /v1 后缀要去掉。
 
-    所有 OpenAI 兼容 provider(OpenAI/DeepSeek/Gemini/Ollama 等)共用此客户端,
-    仅靠 base_url + api_key + model 三参数差异化。
+    兼容两种 secret 形态(带 /v1 的 openai 风格、不带的裸网关地址),secret 值不可读,
+    这里统一收敛成 SDK 期望的形态。
+    """
+    trimmed = base_url.rstrip("/")
+    if trimmed.endswith("/v1"):
+        trimmed = trimmed[: -len("/v1")]
+    return trimmed
+
+
+class AIClient:
+    """Anthropic Messages 协议 LLM 客户端:complete() 调用 /v1/messages 返回文本。
+
+    网关认证走 Authorization: Bearer(auth_token 参数),不认 anthropic 默认的 x-api-key;
+    响应体是 content blocks,正文取全部 text block 拼接(reasoning/thinking block 不进正文)。
     """
 
     def __init__(self, config: AIClientConfig):
-        """从 config 读取 API key(从 api_key_env 指定的环境变量),构造 AsyncOpenAI 客户端。"""
+        """从 config 读取 API key(从 api_key_env 指定的环境变量),构造 AsyncAnthropic 客户端。"""
         self.config = config
         api_key = os.environ.get(config.api_key_env)
         if not api_key:
@@ -59,9 +74,9 @@ class AIClient:
                 f"Please set it in .env or your environment."
             )
         self.api_key = api_key
-        self._client = AsyncOpenAI(
-            api_key=api_key,
-            base_url=config.base_url,
+        self._client = AsyncAnthropic(
+            auth_token=api_key,
+            base_url=_normalize_base_url(config.base_url) if config.base_url else None,
             timeout=60.0,  # 避免 Tier1 并发场景慢请求阻塞 semaphore
         )
 
@@ -70,19 +85,12 @@ class AIClient:
         system: str,
         user: str,
         *,
-        temperature: float = 0.7,
         max_tokens: int | None = None,
     ) -> str:
         """调用 LLM,返回文本响应(system + user 单轮)。
 
-        temperature: 0.7 默认(创造性),0 用于 JSON 修复重试。
-        max_tokens: None 时由模型自行决定。
+        max_tokens: None 时用 _DEFAULT_MAX_TOKENS(Anthropic 协议必填)。
         """
-        messages = [
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ]
-
         # 网络重试:连接/限流/5xx 指数退避(最多 3 次),4xx 认证/参数错误不重试
         async for attempt in AsyncRetrying(
             stop=stop_after_attempt(3),
@@ -91,11 +99,11 @@ class AIClient:
             reraise=True,
         ):
             with attempt:
-                response = await self._client.chat.completions.create(
+                response = await self._client.messages.create(
                     model=self.config.model,
-                    messages=messages,
-                    temperature=temperature,
-                    max_tokens=max_tokens,
+                    system=system,
+                    messages=[{"role": "user", "content": user}],
+                    max_tokens=max_tokens if max_tokens is not None else _DEFAULT_MAX_TOKENS,
                 )
-                return response.choices[0].message.content or ""
+                return "".join(block.text for block in response.content if block.type == "text")
         return ""  # 不可达(tenacity reraise 或 return 在循环内)
