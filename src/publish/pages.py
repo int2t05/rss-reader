@@ -30,7 +30,7 @@ class GitHubPagesPublisher:
         """发布简报到 docs/_posts/YYYY-MM-DD-daily-briefing.md,返回文件路径。
 
         文件含 Chirpy 兼容 front matter(layout/title/date/categories/tags)。
-        title 从内容首行 `#` 标题提取;tags 从正文 `## 分类` 节提取(全小写)。
+        title 从内容首行 `#` 标题提取;tags 从分类标题显式锚点提取。
         """
         self.posts_dir.mkdir(parents=True, exist_ok=True)
         date_str = date.strftime("%Y-%m-%d")
@@ -41,7 +41,7 @@ class GitHubPagesPublisher:
     def _with_front_matter(self, content: str, date: datetime) -> str:
         """添加 Chirpy 兼容 front matter:layout/title/date/categories/tags。
 
-        date 带时区(+0800)满足 Chirpy 要求;tags 从正文 ## 分类节提取,全小写。
+        date 带时区(+0800)满足 Chirpy 要求;tags 从分类标题显式锚点提取。
         """
         first_line = content.lstrip().split("\n", 1)[0] if content.strip() else ""
         # 用正则去掉行首 # 与空白,避免 lstrip("# ") 按字符集误吃 "#hashtag" 中的 #
@@ -50,7 +50,7 @@ class GitHubPagesPublisher:
         date_chirpy = date.strftime("%Y-%m-%d %H:%M:%S +0800")
         # title 用 YAML 双引号字符串,转义内部双引号防止破坏 front matter
         escaped_title = title.replace('"', '\\"')
-        # tags 从正文 ## 分类节提取(如 ## ai-research → ai-research),全小写
+        # 从 Markdown 显式标题锚点提取分类 ID,保留中文显示名与站点标签的稳定映射
         tags = self._extract_tags(content)
         tags_yaml = ", ".join(tags) if tags else "日报"
         front_matter = (
@@ -66,9 +66,14 @@ class GitHubPagesPublisher:
         return front_matter + content
 
     def _extract_tags(self, content: str) -> list[str]:
-        """从正文 ## 分类节标题提取标签(如 ## ai-research → ai-research),全小写。"""
-        return [
-            m.lower()
-            for m in re.findall(r"^##\s+(\S+)", content, re.MULTILINE)
-            if not m.startswith("#")
-        ]
+        """从分类标题的显式锚点提取标签,旧格式仍回退到标题首词。"""
+        tags = []
+        for heading in re.findall(r"^##\s+(.+?)\s*$", content, re.MULTILINE):
+            anchor = re.search(r"\{#([a-z0-9]+(?:-[a-z0-9]+)*)\}\s*$", heading)
+            if anchor:
+                tags.append(anchor.group(1))
+            else:
+                label = heading.split(maxsplit=1)[0]
+                if not label.startswith("{"):
+                    tags.append(label.lower())
+        return tags

@@ -42,6 +42,17 @@ def test_system_prompt_instructs_json_output(category_tree_json: str):
     assert "tags" in prompt
 
 
+def test_system_prompt_requires_a_concise_chinese_news_sentence(category_tree_json: str):
+    """summary 同时作为链接名与目录标题,要求简体中文短句。"""
+    prompt = analysis_system_prompt(category_tree_json)
+    assert "也会用作原文链接名称和目录标题" in prompt
+    assert "20–45 个汉字" in prompt
+    assert "不要整句照抄英文标题" in prompt
+    assert "不复述打分、热度或标签" in prompt
+    assert "用简体中文标点" in prompt
+    assert "研究相关：" in prompt
+
+
 def test_system_prompt_specifies_score_range(category_tree_json: str):
     """system prompt 说明 0-10 评分标准。"""
     prompt = analysis_system_prompt(category_tree_json)

@@ -23,7 +23,7 @@ github:
 social:
   name: int2t05
 
-# 文章页 TOC 大纲(右侧 panel 显示 h2/h3 大纲)
+# 日报页 TOC 由 briefing-tools.html 移到左侧固定栏;窄屏置于正文前
 toc: true
 
 # Chirpy 主题(gem 形式,需 Actions 构建)

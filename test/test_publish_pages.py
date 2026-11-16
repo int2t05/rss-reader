@@ -88,3 +88,9 @@ def test_publisher_hashtag_title_not_stripped(publisher: GitHubPagesPublisher):
     front_matter = file_content.split("---")[1]
     # #hashtag 的 # 不应被吃掉
     assert "hashtag" in front_matter
+
+
+def test_publisher_extracts_stable_tag_from_chinese_heading_anchor(publisher: GitHubPagesPublisher):
+    """中文分类名通过显式标题锚点保留原有站点标签 ID。"""
+    content = "## AI 研究 {#ai-research}\n\n## 系统工程 {#systems}\n"
+    assert publisher._extract_tags(content) == ["ai-research", "systems"]

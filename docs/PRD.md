@@ -19,7 +19,8 @@
 - 分类体系:6 大类(另 finance/crypto 预留)+ 子类,分类感知阈值 + 配额平衡
 - Tier 1:单次 LLM 分类 + 打分 + 摘要(合并调用,`analysis_concurrency` 控制,当前 20)
 - Tier 2:URL 去重 + 分类阈值 + 批量主题去重 + 配额平衡(零 AI)
-- 中文渲染:产出中文 Markdown 每日简报
+- 中文渲染:分类名使用中文显示名;每条内容以简体中文一句新闻作为原文链接名和目录标题;阅读面隐藏内部评分与标签
+- 阅读布局:桌面左侧固定展开本期大纲,窄屏在正文前显示可滚动目录
 - 发布:GitHub Pages(Chirpy 主题)+ Webhook(飞书/Slack/Discord/自定义,并发)
 - 落盘:`data/summaries/YYYY-MM-DD.md` + `docs/_posts/YYYY-MM-DD-daily-briefing.md`
 - 回填:`--date YYYY-MM-DD` 指定日期产出简报,跳过 dedup 过滤与标记(CI 手动触发用)

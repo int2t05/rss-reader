@@ -335,7 +335,13 @@ async def run_pipeline(
 
     # 渲染中文日报(now 已含回填日期语义;区间回填标题走合刊串)
     err_console.print("[bold]Rendering daily briefing...[/bold]")
-    content = render_markdown(selected, date=now, period=period)
+    category_labels = {category.name: category.display_name for category in registry.all()}
+    content = render_markdown(
+        selected,
+        date=now,
+        period=period,
+        category_labels=category_labels,
+    )
 
     # 落盘
     summaries_dir = (project_dir or Path.cwd()) / "data" / "summaries"

@@ -1,4 +1,4 @@
-"""Markdown 简报渲染测试:按分类组织,每条目含 title/score/summary/tags。
+"""Markdown 简报渲染测试:中文分类、新闻链接名与轻量日期信息。
 
 纯逻辑测试,无网络无 LLM。用真实 ContentItem 数据验证渲染输出。
 """
@@ -62,52 +62,70 @@ def test_render_markdown_period_overrides_title_date():
 
 
 def test_render_markdown_contains_category_section():
-    """按分类分节:分类路径作为标题。"""
+    """分类标题使用配置提供的中文显示名。"""
     items = [_make_item(category_path="ai-research/ai-papers")]
+    md = render_markdown(
+        items,
+        date=datetime(2026, 9, 17, tzinfo=UTC),
+        category_labels={"ai-research": "AI 研究"},
+    )
+    assert "## AI 研究 {#ai-research}" in md
+    assert "## ai-research" not in md
+
+
+def test_render_markdown_uses_chinese_news_sentence_as_source_link():
+    """简洁中文新闻句成为原文链接名与大纲标题,不重复显示旧字段。"""
+    items = [
+        _make_item(
+            title="OpenAI announces GPT-5.6 with expanded capabilities",
+            summary="OpenAI 发布 GPT-5.6，新增更强的多模态推理能力。",
+        )
+    ]
     md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
-    assert "ai-research" in md.lower() or "AI 研究" in md or "ai-papers" in md.lower()
+    assert "### [OpenAI 发布 GPT-5.6，新增更强的多模态推理能力。](https://example.com/post)" in md
+    assert "OpenAI announces GPT-5.6" not in md
+    assert "摘要" not in md
+    assert "分数" not in md
+    assert "标签" not in md
 
 
-def test_render_markdown_contains_item_title():
-    """每条目标题出现在简报中。"""
-    items = [_make_item(title="GPT-5 正式发布")]
-    md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
-    assert "GPT-5 正式发布" in md
-
-
-def test_render_markdown_contains_score():
-    """每条目分数出现在简报中。"""
+def test_render_markdown_hides_internal_score():
+    """内部排序分数不出现在阅读页面。"""
     items = [_make_item(score=8.5)]
     md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
-    assert "8.5" in md
+    assert "8.5" not in md
+    assert "分数" not in md
 
 
 def test_render_markdown_contains_item_date():
-    """每条目显示发布日期(月-日),供读者核查时效。"""
+    """每条目用简体中文显示发布日期。"""
     items = [_make_item()]
     md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
-    assert "发布" in md
-    assert "09-17" in md
+    assert "发布于 9月17日" in md
 
 
-def test_render_markdown_contains_summary():
-    """每条目摘要出现在简报中。"""
-    items = [_make_item(summary="一句话技术摘要")]
+def test_render_markdown_falls_back_to_source_title_when_summary_is_empty():
+    """LLM 摘要缺失时仍保留可访问的原文链接。"""
+    items = [_make_item(title="原始标题", summary="")]
     md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
-    assert "一句话技术摘要" in md
+    assert "### [原始标题](https://example.com/post)" in md
 
 
 def test_render_markdown_groups_items_by_category():
     """同分类的多个条目归入同一分类节。"""
     items = [
-        _make_item(title="条目A", category_path="ai-research/ai-papers"),
-        _make_item(title="条目B", category_path="ai-research/ai-papers"),
-        _make_item(title="条目C", category_path="systems/eng-blog"),
+        _make_item(title="条目A", summary="新闻A", category_path="ai-research/ai-papers"),
+        _make_item(title="条目B", summary="新闻B", category_path="ai-research/ai-papers"),
+        _make_item(title="条目C", summary="新闻C", category_path="systems/eng-blog"),
     ]
-    md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
-    idx_a = md.find("条目A")
-    idx_b = md.find("条目B")
-    idx_c = md.find("条目C")
+    md = render_markdown(
+        items,
+        date=datetime(2026, 9, 17, tzinfo=UTC),
+        category_labels={"ai-research": "AI 研究", "systems": "系统工程"},
+    )
+    idx_a = md.find("新闻A")
+    idx_b = md.find("新闻B")
+    idx_c = md.find("新闻C")
     assert idx_a < idx_b  # 同分类相邻
     assert idx_c != -1
 
@@ -127,17 +145,17 @@ def test_render_markdown_contains_chinese_title():
     assert "简报" in md or "日报" in md or "每日" in md
 
 
-def test_render_markdown_contains_tags():
-    """条目标签出现在简报中。"""
+def test_render_markdown_hides_internal_tags():
+    """标签用于筛选分析,不挤进每日阅读面。"""
     items = [_make_item()]
     md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
-    assert "tag1" in md
-    assert "tag2" in md
+    assert "tag1" not in md
+    assert "tag2" not in md
 
 
 def test_render_markdown_escapes_link_special_chars():
-    """标题/URL 含 ] 或 ) 时转义,不破坏 Markdown 链接语法。"""
-    items = [_make_item(title="GPT-5 (多模态) 发布 [更新]")]
+    """新闻句/URL 含 ] 或 ) 时转义,不破坏 Markdown 链接语法。"""
+    items = [_make_item(summary="GPT-5 (多模态) 发布 [更新]")]
     md = render_markdown(items, date=datetime(2026, 9, 17, tzinfo=UTC))
     assert "GPT-5" in md
     assert "\\(多模态\\)" in md

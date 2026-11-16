@@ -10,5 +10,53 @@
   }
   .brief-read-btn:hover { border-color: var(--link-color); }
   .brief-read-btn.is-read { color: var(--text-muted-color); background: transparent; }
+
+  /* 桌面:在站点导航与正文之间固定展示完整大纲,窄屏回到正文上方滚动区。 */
+  @media (min-width: 1200px) {
+    #main-content > .row > #main {
+      flex: 0 0 100%;
+      max-width: 100%;
+      padding-left: 260px !important;
+      padding-right: 1.5rem !important;
+    }
+    #main-content > .row > #panel-wrapper { display: none; }
+    #main .post { max-width: 800px; }
+    #toc-wrapper.briefing-outline {
+      position: fixed !important;
+      top: 5rem;
+      z-index: 20;
+      width: 220px;
+      max-height: calc(100vh - 6rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding: .75rem .75rem .75rem 0 !important;
+      border-right: 1px solid var(--main-border-color);
+      background: var(--main-bg);
+    }
+  }
+  @media (max-width: 1199.98px) {
+    #main-content > .row > #main {
+      flex: 0 0 100%;
+      max-width: 100%;
+      padding-right: 1rem !important;
+      padding-left: 1rem !important;
+    }
+    #main .post { max-width: 100%; }
+    #toc-wrapper.briefing-outline {
+      position: static !important;
+      width: auto;
+      max-height: 18rem;
+      overflow-y: auto;
+      margin: .5rem 1rem 1.25rem;
+      padding: .75rem !important;
+      border: 1px solid var(--main-border-color);
+      border-radius: .5rem;
+      background: var(--main-bg);
+    }
+  }
+  #toc-wrapper.briefing-outline .toc-link {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 </style>
 <script src="{{ '/assets/js/briefing-read.js' | relative_url }}" defer></script>

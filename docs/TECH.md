@@ -130,7 +130,7 @@ class ContentSelector:
 def render_markdown(items: list[ContentItem], date: datetime) -> str
 ```
 
-按父分类分节,每条目含 title(链接)/ date(发布日期)/ score / summary / tags。title/url 转义 Markdown 特殊字符。
+按父分类显示 `CategoryConfig.display_name`;每条目把 Tier1 的 `summary` 作为 H3 原文链接名(也是目录项),下方只保留中文发布日期。分数与标签只用于内部筛选,不出现在阅读面;摘要与 URL 转义 Markdown 特殊字符。桌面目录固定在站点导航与正文之间,窄屏置于正文前的滚动区(`docs/_includes/briefing-tools.html`)。
 
 ### 发布(`src/publish/`)
 

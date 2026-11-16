@@ -43,11 +43,41 @@
     row.appendChild(btn);
     content.insertBefore(row, content.firstChild);
 
+    placeOutline();
+    window.addEventListener('resize', positionOutline, { passive: true });
+
     function paint(isRead) {
       btn.textContent = isRead ? '已读 ✓' : '标记已读';
       btn.classList.toggle('is-read', isRead);
     }
     paint(load().has(date));
+  }
+
+  /** 把主题生成的目录移到正文前,桌面固定在导航与正文之间。 */
+  function placeOutline() {
+    var outline = document.getElementById('toc-wrapper');
+    var container = document.querySelector('#main-wrapper > .container');
+    var mainContent = document.getElementById('main-content');
+    if (!outline || !container || !mainContent) return;
+
+    if (outline.parentElement !== container) container.insertBefore(outline, mainContent);
+    outline.classList.add('briefing-outline');
+    outline.setAttribute('aria-label', '本期大纲');
+    var heading = outline.querySelector('.panel-heading');
+    if (heading) heading.textContent = '本期大纲';
+    positionOutline();
+  }
+
+  /** 读取主题正文列位置,适配侧栏宽度和桌面断点。 */
+  function positionOutline() {
+    var outline = document.getElementById('toc-wrapper');
+    var main = document.getElementById('main');
+    if (!outline || !main) return;
+    if (window.innerWidth >= 1200) {
+      outline.style.left = Math.max(12, main.getBoundingClientRect().left + 16) + 'px';
+    } else {
+      outline.style.left = '';
+    }
   }
 
   if (document.readyState === 'loading') {

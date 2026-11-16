@@ -152,8 +152,9 @@ class RSSSource:
 
 - Prompts live in `src/ai/prompting/` (`classification.py` for Tier 1, `deduplication.py` for topic dedup). Python-generated, not Markdown files.
 - System prompts are category-aware via `category_tree_json()` injection (threshold/display_name/children).
+- Tier 1 `summary` is one concise simplified-Chinese news sentence (normally 20–45 Chinese characters); the renderer uses it as the linked H3 headline and TOC label. Category H2 headings use `CategoryConfig.display_name`; reader-facing output omits internal score and tags.
 - **Recency rule (binding).** The user prompt carries `published_at` + age in days; the system prompt discounts stale items (≤1d full / 2-3d light / >3d heavy), research-interest items exempt. Do not remove this rule; keep it consistent with Tier 2's `max_age_days` hard cutoff.
-- **Research-interest weighting (binding).** The user's research focus is evolutionary computation & distributed optimization (PSO/ACO/GA, multi-agent, swarm, LLM+EC, surrogate-assisted, key authors Wei-Neng Chen / Jun Zhang / Feng-Feng Wei / Xiao-Qi Guo, venues IEEE TEVC/TSC/JAS). The Tier 1 prompt carries a weighting rule: items whose core topic matches get +2 or higher scores and a 「研究相关:」 summary prefix. Do not remove or weaken this rule; keyword additions are allowed.
+- **Research-interest weighting (binding).** The user's research focus is evolutionary computation & distributed optimization (PSO/ACO/GA, multi-agent, swarm, LLM+EC, surrogate-assisted, key authors Wei-Neng Chen / Jun Zhang / Feng-Feng Wei / Xiao-Qi Guo, venues IEEE TEVC/TSC/JAS). The Tier 1 prompt carries a weighting rule: items whose core topic matches get +2 or higher scores and a 「研究相关：」 summary prefix. Do not remove or weaken this rule; keyword additions are allowed.
 
 ## Project boundaries
 

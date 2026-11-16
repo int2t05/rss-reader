@@ -35,7 +35,7 @@ def analysis_system_prompt(category_tree_json: str) -> str:
 
 ## 研究兴趣加权(优先级高于基础评分与时效降分)
 用户重点研究方向为进化计算与分布式优化。条目命中以下任一主题时,分数显著上调
-(至少 +2,通常进 8-10 段),并在 summary 开头标注「研究相关:」:
+(至少 +2,通常进 8-10 段),并在 summary 开头标注「研究相关：」:
 - 进化计算/群智算法:进化计算、遗传算法、粒子群 PSO、蚁群 ACO、差分进化、进化策略、演化计算、群体智能、swarm
 - 分布式/多智能体优化:分布式优化、多智能体、multi-agent、共识优化、众包优化、crowdsourcing
 - LLM 与 EC 结合:LLM 超参调优、LLM 算法进化、Algorithm Evolution、自动算法设计、元黑盒优化、meta-black-box
@@ -47,6 +47,21 @@ def analysis_system_prompt(category_tree_json: str) -> str:
 - 关键载体:IEEE TEVC / TSC / IEEE-CAA JAS 上的进化计算论文
 判断标准:主题是条目的核心内容(而非顺带提及)才加权。
 
+## 新闻句写法
+summary 是日报中唯一显示的新闻句,也会用作原文链接名称和目录标题。
+用简体中文写成一句简洁、可独立理解的新闻句,通常 20–45 个汉字,最多 55 字。
+- 先写清谁做了什么,再给最关键的结果或影响;只保留一条主信息,不把多个背景、数据和评价挤进一句话。
+- 只保留读者理解事件所需的产品名、机构名和技术词;尽量用常见中文表达,不要整句照抄英文标题。
+- 使用简体中文标点;专有名词保留官方拼写,不在中英文之间堆叠括号释义。
+- 不写“值得关注”“重大动态”“引发热议”等空泛结尾,不复述打分、热度或标签。不要用感叹号制造语气。
+- 对尚未证实的消息保留“据称”“可能”等限定,不把推测写成事实。
+- 命中研究兴趣时,必须以“研究相关：”开头,后面仍保持一句简洁新闻句。
+
+示例:
+- 原文标题:Gemini Robotics 2.5;写法:Google 发布 Gemini Robotics 2.5，提升机器人在真实任务中的操作能力。
+- 原文标题:Nvidia allegedly engineered scarcity by funding AI startups to buy its GPUs;
+  写法:NVIDIA 被指资助 AI 初创公司购买自家 GPU，以制造供货紧张。
+
 ## 源 category hint
 条目可能附带源级 category hint(如 "ai-research/ai-vendor")。默认采用 hint,
 但如果内容明显跨类,请 override 为更合适的分类。
@@ -56,7 +71,7 @@ def analysis_system_prompt(category_tree_json: str) -> str:
 {{
   "category": "分类路径,如 ai-research/ai-papers",
   "score": 8.5,
-  "summary": "一句话中文摘要",
+  "summary": "20–45 字的简体中文新闻句",
   "tags": ["标签1", "标签2", "标签3"]
 }}
 
