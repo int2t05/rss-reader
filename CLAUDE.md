@@ -125,7 +125,7 @@ node --check docs/assets/js/calendar.js
 ### Data layer
 
 - SQLite `data/dedup.db` is the queue consumption checkpoint (item_id, fetched_at). No ORM, raw `sqlite3`. It is committed to the repo (persisted across CI runs — CI runners are ephemeral, the checkpoint must survive). **Single-writer rule: only CI (daily.yml) commits dedup.db.** After running the pipeline locally, restore it (`git restore data/dedup.db`) instead of committing — a diverged binary checkpoint cannot be rebased and would break CI's push.
-- Daily summaries are Markdown files in `data/summaries/YYYY-MM-DD.md` — diffable, git-trackable. Do not store summaries in a database.
+- Daily summaries are Markdown files in `data/summaries/YYYY-MM-DD.md`. Local copies stay ignored; the CI workflow explicitly force-adds generated summaries for the archive. Do not store summaries in a database.
 - No RAG / vector store. If cross-day trend tracking is needed later, add SQLite FTS5 — not pgvector.
 - Config: JSON for main config, YAML for feed lists (human-editable long lists). Both support `${VAR}` env expansion.
 
