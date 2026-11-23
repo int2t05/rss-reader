@@ -21,13 +21,13 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v10.3.3
         with:
-          version: "0.11.3"
-          enable-cache: true
+          version: "0.13.7"
+          enable-cache: false
 
       - name: Set up Python
         run: uv python install 3.12
@@ -42,7 +42,7 @@ jobs:
         run: uv run pytest -m "not network and not llm"
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7.1.0
         with:
           node-version: 22
 
@@ -55,7 +55,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
 
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
