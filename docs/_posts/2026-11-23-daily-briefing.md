@@ -1,0 +1,214 @@
+---
+layout: post
+title: "每日简报 · 2026-11-23"
+date: 2026-11-23 08:19:15 +0800
+categories: [简报]
+tags: [ai-research, dev-community, research, systems, tech-news]
+toc: true
+---
+
+# 每日简报 · 2026-11-23
+
+**本期精选**：48 条
+
+## AI 研究 {#ai-research}
+
+### [Anthropic 团队宣称用 Claude 证明又一千禧年大奖难题，促使数学家公开 12 年写成的 940 页手稿。](https://www.qbitai.com/2026/11/511870.html)
+
+*发布于 11月22日*
+
+### [OpenAI 发布 GPT-6.2 Astra，性能提升的同时 API 价格下调 20%，单任务成本接近减半。](https://www.leiphone.com/category/ai/MR1Osv9r2Rtr4V7F.html)
+
+*发布于 11月23日*
+
+### [OpenAI 发布《困惑度与智能》一文，探讨语言模型输出与困惑度的关系。](https://openai.com/index/perplexity-and-intelligence/)
+
+*发布于 11月22日*
+
+### [姚顺雨团队透露下一代混元将大幅扩展参数规模，并称递归自我改进仍处早期阶段。](https://www.infoq.cn/article/b4QKbFZaXvbK9hzcBhZV?utm_source=rss&utm_medium=article)
+
+*发布于 11月23日*
+
+## 开发者社区 {#dev-community}
+
+### [分析称 Anthropic 到 2028 年数据中心电力 87% 将来自天然气、11% 来自煤炭。](https://betterdatacenterproject.com/2026/11/16/how-ai-is-powered-a-breakdown-of-byop-and-grid-power/)
+
+*发布于 11月22日*
+
+### [开发者用 Claude 生成进度图，跟踪 Alessandro Masullo 数学手稿的 Lean 形式化进展。](https://claude.ai/artifact/CtQyX8qfYAF822bgHJHHE3)
+
+*发布于 11月22日*
+
+### [路由器厂商 GL.iNet 发布安全公告，说明相关安全问题及应对措施，社区讨论热烈。](https://www.gl-inet.com/en-us/blogs/blog/glinet-security-notice-2026-11-20)
+
+*发布于 11月22日*
+
+### [OpenRouter 披露其推理服务商发生数据处理事故，用户请求数据可能被违规处理。](https://openrouter.ai/blog/announcements/data-processing-incidents-on-inference-providers/)
+
+*发布于 11月22日*
+
+### [Tesla 发布 FSD V15，对端到端自动驾驶网络的各组成部分进行全面升级。](https://www.producthunt.com/products/tesla)
+
+*发布于 11月22日*
+
+### [GitHub 热榜显示 Agent 正加速平台化，MCP 逐渐成为连接各类工具的通用接口。](https://int2t05.github.io/auto-trend/daily/2026-11-23.html)
+
+*发布于 11月23日*
+
+### [GitHub 热榜聚焦 Agent 技能包趋势，开发者用命令行外壳让 Agent 以纯文本操作 CAD 等桌面软件。](https://int2t05.github.io/auto-trend/daily/2026-11-22.html)
+
+*发布于 11月22日*
+
+## 论文科研 {#research}
+
+### [研究相关：新论文提出 MG-EDA 算法，用种群成熟度门控的偏正态采样改进分布估计，缓解收敛停滞。](https://arxiv.org/abs/2611.26938)
+
+*发布于 11月23日*
+
+### [研究相关：研究提出LLM辅助的IG-DOE框架，通过多破坏算子协同演化提升流水车间调度求解性能。](https://arxiv.org/abs/2606.15334)
+
+*发布于 11月23日*
+
+### [研究相关：HookEvo 框架通过候选生成与筛选自动进化智能体插件 harness，Qwen3-4B 在 ALFWorld 上达 95.41%。](https://arxiv.org/abs/2611.27294)
+
+*发布于 11月23日*
+
+### [研究相关：研究者提出 DisQ 方法，利用 Q 值差距筛选多智能体强化学习中易触发协调失效的状态。](https://arxiv.org/abs/2611.27368)
+
+*发布于 11月23日*
+
+### [研究相关：研究者提出基于三角不等式剪枝的 FedTriCD 算法，降低纵向联邦聚类的通信与计算开销。](https://arxiv.org/abs/2611.27117)
+
+*发布于 11月23日*
+
+### [研究相关：arXiv 论文提出 SALVES 框架，用可迁移学习价值模型结合模拟退火搜索求解预算约束子集选择。](https://arxiv.org/abs/2611.27751)
+
+*发布于 11月23日*
+
+### [研究相关：研究者提出非迭代联邦谱方法，支持多机构在不共享病历的前提下学习患者潜在表征。](https://arxiv.org/abs/2611.27900)
+
+*发布于 11月23日*
+
+### [arXiv 新研究建立均匀高斯逼近的普适维度障碍，证明 log d 增长条件在高维统计中既必要又充分。](https://arxiv.org/abs/2611.27777)
+
+*发布于 11月23日*
+
+### [研究团队用现成光学器件搭建10万自旋模拟伊辛机，单次相机曝光并行读出全部自旋，为已报道同类最大规模。](https://arxiv.org/abs/2611.26915)
+
+*发布于 11月23日*
+
+### [研究团队提出基于 FPGA 的复用梯度下降学习方法，实现自旋量子比特量子点的自主调优与稳定。](https://arxiv.org/abs/2611.27140)
+
+*发布于 11月23日*
+
+### [新论文证明任意 0/1-多面体上的线性规划可用 O\(d³\) 次 Simplex 旋转到达最优基，解决九十年代遗留难题。](https://arxiv.org/abs/2611.26830)
+
+*发布于 11月23日*
+
+### [新论文证明四维及以上格点上的 Ising 模型不存在粗糙化相变，Dobrushin 界面态始终不平移不变。](https://arxiv.org/abs/2611.27805)
+
+*发布于 11月23日*
+
+### [论文以能量模型与联想记忆框架分析扩散模型，提出记忆与泛化可在同一检索过程中共存。](https://arxiv.org/abs/2611.26797)
+
+*发布于 11月23日*
+
+### [新研究指出 CHB-MIT 癫痫检测中自监督适应的大幅增益源于实现缺陷，修正后基本消失。](https://arxiv.org/abs/2611.26929)
+
+*发布于 11月23日*
+
+### [新研究证明单个预训练 Transformer 无需影响函数修正即可对一族估计量实现半参数有效推断。](https://arxiv.org/abs/2611.27666)
+
+*发布于 11月23日*
+
+## 系统工程 {#systems}
+
+### [Linebender 发文总结 Rust GUI 开发经验，为图形界面框架设计提出建议。](https://linebender.org/blog/next-100-guis/)
+
+*发布于 11月21日*
+
+### [谷歌采用 Pyrefly 类型检查器，提升 Python 代码类型检查的速度与准确性。](https://www.infoq.cn/article/4mG1MEowzSqIg2cY1XZP?utm_source=rss&utm_medium=article)
+
+*发布于 11月23日*
+
+### [Samokhvalov 推出 PGAIBench 基准与 AAA 审核框架，实测能拦截 AI 修改生产 Postgres 的多数危险变更。](https://postgr.es/p/9Dh)
+
+*发布于 11月23日*
+
+### [InfoQ 发文分析 JDK 24 之后虚拟线程在生产环境 Java 中带来的实际变化。](https://www.infoq.cn/article/JSf8dl9laEVQLb7dCROQ?utm_source=rss&utm_medium=article)
+
+*发布于 11月23日*
+
+### [Nango 发文总结运营上千个 API 授权服务的经验，分享鉴权系统踩坑与维护教训。](https://nango.dev/blog/lessons-from-operating-api-auth-for-900-apis/)
+
+*发布于 11月23日*
+
+### [亚马逊云科技称 Agent 正超越写代码场景，转向应对三个新难题。](https://www.infoq.cn/article/4cFZ1bATcXRJaGPFoF7z?utm_source=rss&utm_medium=article)
+
+*发布于 11月23日*
+
+### [安谋科技发布星辰100e AIoT 原型平台，称 AI 推理性能最高提升 340 倍。](https://www.infoq.cn/article/pdjVKiH3ONYjePlUDufv?utm_source=rss&utm_medium=article)
+
+*发布于 11月23日*
+
+### [技术作者实测对比 Envoy Gateway、Traefik 与 NGINX，给出 Kubernetes 高吞吐网关选型建议。](https://dev.to/grfdsasdvef/envoy-gateway-vs-traefik-vs-nginx-high-throughput-kubernetes-ingress-dynamic-configuration-iob)
+
+*发布于 11月23日*
+
+### [Mats Kindahl 讲解将 PostgreSQL 内存表实现为 UNLOGGED 表,以在服务器重启后正确恢复。](https://postgr.es/p/9Dg)
+
+*发布于 11月22日*
+
+### [亚马逊正式推出 ECS Gateway，支持自动生成主机名，但暂不支持自定义域名。](https://www.infoq.cn/article/6mOVcKUGjpD1VmxZOGqt?utm_source=rss&utm_medium=article)
+
+*发布于 11月23日*
+
+### [开发者实测对比 PDF 提取内嵌图片与整页转图片两种操作，纯文本 PDF 提取结果为零。](https://dev.to/token111/extract-images-from-a-pdf-vs-convert-pages-to-images-why-a-10-page-pdf-gave-0-files-mm5)
+
+*发布于 11月23日*
+
+### [Spring 发布 Spring Cloud 2026.0.0 正式版，现可从 Maven 中央仓库获取。](https://spring.io/blog/2026/11/20/spring-cloud-2026-0-0-has-been-released)
+
+*发布于 11月20日*
+
+## 科技资讯 {#tech-news}
+
+### [Anthropic 数学家称与 Claude 合作提出黎曼猜想证明，并经 Lean 形式化检查。](https://www.tmtpost.com/8214195.html)
+
+*发布于 11月23日*
+
+### [据称 FBI 刑事犯罪数据库疑似遭黑客入侵，FBI 正对此展开调查。](https://www.bbc.com/news/articles/cvze7de86pk3o)
+
+*发布于 11月21日*
+
+### [据日经中文网报道，中国车企新车销售份额已在39个国家超过日本车企，欧洲季度销量亦首次反超。](https://www.ithome.com/1/030/930.htm)
+
+*发布于 11月23日*
+
+### [加州总检察长起诉 OpenAI，指控其将增长置于安全之上，忽视 AI 模型安全风险。](https://www.ithome.com/1/030/921.htm)
+
+*发布于 11月23日*
+
+### [黑客利用自主 AI 平台 Cairn 发现医疗影像软件零日漏洞，成功控制目标服务器。](https://www.ithome.com/1/030/917.htm)
+
+*发布于 11月23日*
+
+### [Thinking Machines Lab 发布循环 Transformer 模型 Inkling 2 Mini，多项智能体编程基准表现领先。](https://www.ithome.com/1/030/907.htm)
+
+*发布于 11月23日*
+
+### [《经济学人》分析称，黄仁勋失势将对硅谷加速主义者的 AI 发展愿景造成冲击。](https://www.economist.com/business/2026/11/19/jensen-huangs-fall-is-bad-news-for-silicon-valleys-accelerationists)
+
+*发布于 11月21日*
+
+### [OpenAI 首席科学家探讨为 AI 发展设限速，主张先就衡量速度的标准达成共识。](https://techcrunch.com/2026/11/22/openais-chief-scientist-has-thoughts-on-how-to-limit-ai-development/)
+
+*发布于 11月22日*
+
+### [The Verge 撰文指出，近期美国航空、Outlook 和摩根大通的大规模服务中断不会是最后一次，预计还有更多故障发生。](https://www.theverge.com/tech/1039851/major-tech-outages)
+
+*发布于 11月22日*
+
+### [Notable Capital、GIC 与 Baillie Gifford 披露在 Anthropic 上市前重仓投资的原因。](https://techcrunch.com/2026/11/22/how-notable-capital-gic-and-baillie-gifford-bet-big-on-anthropic-before-its-ipo/)
+
+*发布于 11月23日*
