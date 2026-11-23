@@ -4,6 +4,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![uv](https://img.shields.io/badge/uv-4B275F?style=flat-square&logo=uv&logoColor=white)](https://github.com/astral-sh/uv)
+[![CI](https://github.com/int2t05/rss-reader/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/int2t05/rss-reader/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 [![LLM](https://img.shields.io/badge/LLM-Anthropic%20protocol-f0daba?style=flat-square&logo=anthropic&logoColor=black)](docs/TECH.md)
 [![RSS](https://img.shields.io/badge/sources-172%20feeds-f97316?style=flat-square&logo=rss&logoColor=white)](feeds/)
@@ -35,7 +36,15 @@ uv run rss-reader --no-publish
 
 # 测试(无 mock,真实数据)
 uv run python -m pytest
+
+# 与 CI 一致:不调用 RSS 或 LLM 服务
+uv run pytest -m "not network and not llm"
+uv run ruff check .
+node --check docs/assets/js/briefing-read.js
+node --check docs/assets/js/calendar.js
 ```
+
+推送与 PR 会自动执行静态检查、离线测试、浏览器脚本语法检查和 Jekyll 生产构建。完整测试包含真实 RSS/LLM 调用，不在 CI 中运行。
 
 ## 架构
 

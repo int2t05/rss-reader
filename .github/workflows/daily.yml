@@ -36,14 +36,14 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "latest"
+          version: "0.11.3"
           enable-cache: true
 
       - name: Set up Python
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --extra dev
+        run: uv sync --locked --extra dev
 
       - name: Run daily pipeline
         env:
@@ -53,32 +53,33 @@ jobs:
           OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
           RSSHUB_BASE_URL: ${{ secrets.RSSHUB_BASE_URL }}
           FLUXSIFT_FEED_URL: ${{ secrets.FLUXSIFT_FEED_URL }}
+          BACKFILL_DATE: ${{ github.event.inputs.date }}
+          BACKFILL_UNTIL: ${{ github.event.inputs.until }}
         run: |
-          BACKFILL="${{ github.event.inputs.date }}"
-          UNTIL="${{ github.event.inputs.until }}"
-          ARGS=""
-          if [ -n "$BACKFILL" ]; then
-            ARGS="$ARGS --date $BACKFILL"
+          args=(--log-level INFO)
+          if [[ -n "$BACKFILL_DATE" ]]; then
+            args+=(--date "$BACKFILL_DATE")
           fi
-          if [ -n "$UNTIL" ]; then
-            ARGS="$ARGS --until $UNTIL"
+          if [[ -n "$BACKFILL_UNTIL" ]]; then
+            args+=(--until "$BACKFILL_UNTIL")
           fi
-          uv run rss-reader --log-level INFO $ARGS
+          uv run rss-reader "${args[@]}"
 
       - name: Commit and push briefing
+        env:
+          BACKFILL_DATE: ${{ github.event.inputs.date }}
+          BACKFILL_UNTIL: ${{ github.event.inputs.until }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/_posts/ data/summaries/ data/dedup.db || true
+          git add -- docs/_posts/ data/summaries/ data/dedup.db
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            BACKFILL="${{ github.event.inputs.date }}"
-            UNTIL="${{ github.event.inputs.until }}"
-            if [ -n "$BACKFILL" ] && [ -n "$UNTIL" ]; then
-              MSG_DATE="${BACKFILL}..${UNTIL}"
+            if [[ -n "$BACKFILL_DATE" && -n "$BACKFILL_UNTIL" ]]; then
+              MSG_DATE="${BACKFILL_DATE}..${BACKFILL_UNTIL}"
             else
-              MSG_DATE="${BACKFILL:-$(date -u +%Y-%m-%d)}"
+              MSG_DATE="${BACKFILL_DATE:-$(date -u +%Y-%m-%d)}"
             fi
             git commit -m "docs(daily): $MSG_DATE briefing"
             # 运行期间可能有新 push,rebase 后再推,避免 fast-forward 拒绝

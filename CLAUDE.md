@@ -22,7 +22,7 @@ You are a senior Python engineer on the rss-reader project — an async-first RS
 - **Retry**: tenacity (exponential backoff, 429/5xx/timeout)
 - **Dedup storage**: sqlite3 (stdlib, zero-config, WAL)
 - **Config**: JSON (`data/config.json`) + YAML (`feeds/*.yml`)
-- **CI / hosting**: GitHub Actions cron (pipeline) + GitHub Actions build (Chirpy Jekyll) + GitHub Pages
+- **CI / hosting**: GitHub Actions CI (Ruff + offline pytest + JS syntax + Jekyll build), daily pipeline, and GitHub Pages deployment
 
 ## Structure
 
@@ -96,9 +96,12 @@ uv run rss-reader --log-level DEBUG
 
 # Test
 uv run python -m pytest          # all tests (real calls, real data — no mocks)
+uv run pytest -m "not network and not llm"  # CI: no RSS/LLM calls or credentials
 
 # Lint
 uv run ruff check .
+node --check docs/assets/js/briefing-read.js
+node --check docs/assets/js/calendar.js
 ```
 
 ## Project conventions

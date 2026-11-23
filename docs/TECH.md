@@ -144,6 +144,10 @@ class WebhookPublisher:
 
 `GitHubPagesPublisher` 写 Chirpy front matter(layout/title/date 带时区/categories/tags)。`WebhookPublisher` 支持 Feishu/Slack/Discord/Custom,`asyncio.gather` 并发。
 
+### 持续集成
+
+`.github/workflows/ci.yml` 在 `main` 推送与 PR 上验证锁定依赖、Ruff、离线 pytest、站点 JavaScript 语法和 Jekyll 生产构建。CI 排除 `network` 与 `llm` 标记用例，不需要服务凭证；真实 RSS/LLM 集成测试由手动全量测试执行。日报工作流通过环境变量接收补跑日期，并让暂存错误直接失败。
+
 ### 存储(`src/storage/`)
 
 ```python
