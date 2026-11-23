@@ -63,6 +63,8 @@ jobs:
           ruby-version: "3.3"
           bundler-cache: true
           working-directory: docs
+        env:
+          BUNDLE_FROZEN: "true"
 
       - name: Build site
         working-directory: docs
